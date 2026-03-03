@@ -1,0 +1,1 @@
+-- Add local seed data here when you want richer dashboard mocks.

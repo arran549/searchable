@@ -1,0 +1,28 @@
+{
+  "name": "searchable-takehome",
+  "private": true,
+  "engines": {
+    "node": ">=22.15.1"
+  },
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @searchable/web",
+    "build": "npm run build --workspace @searchable/web",
+    "typecheck": "npm run typecheck --workspace @searchable/web",
+    "lint": "npm exec biome check .",
+    "format": "npm exec biome check . --write",
+    "check": "npm run lint && npm run typecheck",
+    "db:start": "npm exec supabase start",
+    "db:stop": "npm exec supabase stop",
+    "db:reset": "npm exec supabase db reset",
+    "db:status": "npm exec supabase status",
+    "db:types": "npm exec supabase gen types typescript --local --schema public > apps/web/lib/database.types.ts",
+    "fn:serve:track": "npm exec supabase functions serve track --no-verify-jwt"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.5",
+    "supabase": "2.76.16"
+  }
+}
