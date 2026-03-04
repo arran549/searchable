@@ -6,6 +6,8 @@ create table if not exists public.sites (
   name text,
   domain text not null unique,
   verification_token text not null unique default encode(gen_random_bytes(18), 'hex'),
+  tracking_token text not null unique default encode(gen_random_bytes(18), 'hex'),
+  verified_at timestamptz,
   created_at timestamptz not null default timezone('utc', now())
 );
 

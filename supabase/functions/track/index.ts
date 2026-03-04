@@ -1,43 +1,64 @@
-import { createClient } from "npm:@supabase/supabase-js@2.98.0";
-
-import { classifyBot } from "../_shared/bots.ts";
 import { corsHeaders } from "../_shared/cors.ts";
+import { gif, json, text } from "../_shared/http.ts";
+import { getScriptSource } from "../_shared/tracker-assets.ts";
+import { insertEvent, type TrackPayload } from "../_shared/tracking.ts";
 
-type TrackPayload = {
-  siteId?: string;
-  pageUrl?: string;
-  pagePath?: string;
-  occurredAt?: string;
-  userAgent?: string;
-  ipHash?: string;
-  source?: string;
-};
+function getRoute(url: URL) {
+  const parts = url.pathname.split("/").filter(Boolean);
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "application/json",
+  return parts.at(-1) ?? "track";
+}
+
+function getStatus() {
+  return json({
+    ok: true,
+    service: "track",
+    timestamp: new Date().toISOString(),
+    env: {
+      hasSupabaseUrl: Boolean(Deno.env.get("SUPABASE_URL")),
+      hasServiceRoleKey: Boolean(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")),
     },
   });
 }
 
-function getPagePath(pageUrl: string, pagePath?: string) {
-  if (pagePath) {
-    return pagePath;
+async function handlePixel(request: Request, url: URL) {
+  const token = url.searchParams.get("token");
+  const pageUrl = url.searchParams.get("pageUrl") ?? request.headers.get("referer");
+  const pagePath = url.searchParams.get("pagePath") ?? undefined;
+
+  if (token && pageUrl) {
+    await insertEvent({
+      token,
+      pageUrl,
+      pagePath,
+      source: "pixel",
+      request,
+    });
   }
 
-  try {
-    return new URL(pageUrl).pathname;
-  } catch {
-    return pageUrl;
-  }
+  return gif();
 }
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
+  }
+
+  const url = new URL(request.url);
+  const route = getRoute(url);
+
+  if (request.method === "GET" && route === "status") {
+    return getStatus();
+  }
+
+  if (request.method === "GET" && route === "track.js") {
+    const baseUrl = new URL(request.url);
+    baseUrl.pathname = baseUrl.pathname.replace(/\/track\.js$/, "");
+    return text(getScriptSource(baseUrl.toString()), "application/javascript; charset=utf-8");
+  }
+
+  if (request.method === "GET" && route === "track.gif") {
+    return await handlePixel(request, url);
   }
 
   if (request.method !== "POST") {
@@ -46,39 +67,17 @@ Deno.serve(async (request) => {
 
   const payload = (await request.json().catch(() => null)) as TrackPayload | null;
 
-  if (!payload?.siteId || !payload.pageUrl) {
-    return json({ error: "siteId and pageUrl are required" }, 400);
+  if (!payload) {
+    return json({ error: "Invalid JSON body" }, 400);
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return json({ error: "Missing Supabase environment configuration" }, 500);
+  try {
+    return await insertEvent({
+      ...payload,
+      request,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unexpected error";
+    return json({ error: message }, 500);
   }
-
-  const userAgent = payload.userAgent ?? request.headers.get("user-agent") ?? "Unknown";
-  const bot = classifyBot(userAgent);
-  const occurredAt = payload.occurredAt ?? new Date().toISOString();
-
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
-  const { error } = await supabase.from("crawler_events").insert({
-    site_id: payload.siteId,
-    occurred_at: occurredAt,
-    user_agent: userAgent,
-    bot_name: bot.name,
-    platform: bot.platform,
-    bot_type: bot.type,
-    page_url: payload.pageUrl,
-    page_path: getPagePath(payload.pageUrl, payload.pagePath),
-    ip_hash: payload.ipHash ?? null,
-    source: payload.source ?? "script",
-    raw_payload: payload,
-  });
-
-  if (error) {
-    return json({ error: error.message }, 500);
-  }
-
-  return json({ ok: true }, 202);
 });

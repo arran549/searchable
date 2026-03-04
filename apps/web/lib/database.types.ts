@@ -55,7 +55,9 @@ export type Database = {
           domain: string;
           id: string;
           name: string | null;
+          tracking_token: string;
           user_id: string;
+          verified_at: string | null;
           verification_token: string;
         };
         Insert: {
@@ -63,7 +65,9 @@ export type Database = {
           domain: string;
           id?: string;
           name?: string | null;
+          tracking_token?: string;
           user_id: string;
+          verified_at?: string | null;
           verification_token?: string;
         };
         Update: Partial<Database["public"]["Tables"]["sites"]["Insert"]>;
