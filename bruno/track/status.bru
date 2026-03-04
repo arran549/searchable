@@ -1,0 +1,32 @@
+meta {
+  name: track status
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/functions/v1/track/status
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Authorization: Bearer {{publishableKey}}
+  apikey: {{publishableKey}}
+}
+
+vars:pre-request {
+  baseUrl: http://127.0.0.1:54321
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("returns ok true", function () {
+    const body = res.getBody();
+    expect(body.ok).to.equal(true);
+  });
+}

@@ -1,0 +1,23 @@
+meta {
+  name: pixel track
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/functions/v1/track/track.gif?token={{trackToken}}&pageUrl={{pageUrl}}&pagePath={{pagePath}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: image/gif
+  Authorization: Bearer {{publishableKey}}
+  apikey: {{publishableKey}}
+}
+
+tests {
+  test("returns gif", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
