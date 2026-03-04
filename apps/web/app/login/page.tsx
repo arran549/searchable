@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { AuthCard } from "@/components/auth-card";
 import { signInAction } from "@/app/auth/actions";
+import { getServerSupabaseClient } from "@/lib/supabase/server";
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -12,6 +14,14 @@ type LoginPageProps = {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { error, message } = await searchParams;
+  const supabase = await getServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
 
   return (
     <main className="shell px-4 py-8 md:px-6 md:py-12">

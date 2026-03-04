@@ -28,6 +28,15 @@ async function getRequestOrigin() {
   return "http://127.0.0.1:3000";
 }
 
+function isLocalOrigin(origin: string) {
+  return (
+    origin.startsWith("http://127.0.0.1:") ||
+    origin.startsWith("http://localhost:") ||
+    origin.startsWith("https://127.0.0.1:") ||
+    origin.startsWith("https://localhost:")
+  );
+}
+
 export async function signUpAction(formData: FormData) {
   const email = getString(formData, "email");
   const password = getString(formData, "password");
@@ -52,6 +61,10 @@ export async function signUpAction(formData: FormData) {
 
   if (data.session) {
     redirect("/dashboard");
+  }
+
+  if (isLocalOrigin(origin)) {
+    redirect("/login?message=Account%20created.%20You%20can%20log%20in%20now");
   }
 
   redirect("/login?message=Check%20your%20email%20to%20confirm%20your%20account");
