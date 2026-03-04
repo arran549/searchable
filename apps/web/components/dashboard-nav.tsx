@@ -61,8 +61,8 @@ export function DashboardNav({
             className={[
               "group flex items-center gap-3 rounded-[1.25rem] border px-3 py-3 text-sm transition",
               active
-                ? "border-white/15 bg-white/12 text-white"
-                : "border-transparent text-[#d6bfaa] hover:border-white/10 hover:bg-white/6 hover:text-white",
+                ? "border-[#3ecf8e55] bg-[#3ecf8e1a] text-white"
+                : "border-transparent text-[#9aa9a2] hover:border-white/10 hover:bg-white/6 hover:text-white",
               collapsed ? "justify-center" : "",
             ].join(" ")}
             title={collapsed ? item.label : undefined}
@@ -71,8 +71,8 @@ export function DashboardNav({
               className={[
                 "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-[11px] font-semibold uppercase tracking-[0.16em]",
                 active
-                  ? "border-white/12 bg-white/12 text-white"
-                  : "border-white/10 bg-black/10 text-[#f3dfcd]",
+                  ? "border-[#3ecf8e77] bg-[#3ecf8e2e] text-[#9af2c6]"
+                  : "border-white/10 bg-black/10 text-[#c8d4cf]",
               ].join(" ")}
             >
               {item.shortLabel}
@@ -81,7 +81,7 @@ export function DashboardNav({
             {!collapsed ? (
               <span className="min-w-0">
                 <span className="block font-semibold text-white">{item.label}</span>
-                <span className="block truncate text-xs text-[#d6bfaa]">{item.summary}</span>
+                <span className="block truncate text-xs text-[#9aa9a2]">{item.summary}</span>
               </span>
             ) : null}
           </Link>

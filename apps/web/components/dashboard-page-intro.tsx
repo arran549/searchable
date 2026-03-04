@@ -50,8 +50,8 @@ export function DashboardPageIntro() {
 
   return (
     <>
-      <h1 className="mt-2 text-3xl font-semibold tracking-[-0.05em] md:text-5xl">{intro.title}</h1>
-      <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)] md:text-base">
+      <h1 className="mt-1.5 text-2xl font-semibold tracking-[-0.04em] md:text-3xl">{intro.title}</h1>
+      <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted-foreground)]">
         {intro.description}
       </p>
     </>

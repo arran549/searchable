@@ -90,9 +90,9 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-[1.5rem] border border-[var(--border)] bg-[#132230] p-5 text-[#f6f0e7] shadow-2xl">
+          <div className="rounded-[1.5rem] border border-[#243039] bg-[#0f1720] p-5 text-[#e7efeb] shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d6bfaa]">
+              <span className="text-xs font-semibold uppercase tracking-[0.22em] text-[#7be6b4]">
                 Quick start
               </span>
               <span className="rounded-full bg-white/10 px-2 py-1 text-xs">
@@ -104,7 +104,7 @@ export default async function HomePage() {
               {steps.map((step) => (
                 <div
                   key={step}
-                  className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-[#f6f0e7]"
+                  className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-[#e7efeb]"
                 >
                   {step}
                 </div>
