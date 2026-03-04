@@ -1,3 +1,8 @@
+import { redirect } from "next/navigation";
+
+import { signOutAction } from "@/app/auth/actions";
+import { getServerSupabaseClient } from "@/lib/supabase/server";
+
 const stats = [
   { label: "Crawler visits", value: "1,284", delta: "+18%" },
   { label: "Tracked platforms", value: "7", delta: "+2" },
@@ -17,7 +22,16 @@ const pages = [
   { path: "/pricing", visits: 119, bot: "PerplexityBot" },
 ];
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const supabase = await getServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login?message=Please%20log%20in%20to%20access%20the%20dashboard");
+  }
+
   return (
     <main className="shell px-4 py-8 md:px-6 md:py-12">
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
@@ -30,8 +44,18 @@ export default function DashboardPage() {
           </h1>
         </div>
 
-        <div className="rounded-full border border-[var(--border)] bg-white/60 px-4 py-2 text-sm text-[var(--muted-foreground)]">
-          Suggested first task: wire `sites` and `crawler_events`
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="rounded-full border border-[var(--border)] bg-white/60 px-4 py-2 text-sm text-[var(--muted-foreground)]">
+            Signed in as {user.email}
+          </div>
+          <form action={signOutAction}>
+            <button
+              type="submit"
+              className="rounded-full border border-[var(--border)] bg-white/60 px-4 py-2 text-sm font-semibold transition hover:bg-white"
+            >
+              Sign out
+            </button>
+          </form>
         </div>
       </div>
 

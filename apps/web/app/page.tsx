@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+import { signOutAction } from "@/app/auth/actions";
+import { getServerSupabaseClient } from "@/lib/supabase/server";
+
 const pillars = [
   {
     title: "Focused repo shape",
@@ -15,14 +18,14 @@ const pillars = [
   },
 ];
 
-const steps = [
-  "npm install",
-  "cp apps/web/.env.example apps/web/.env.local",
-  "npm run db:start",
-  "npm run dev",
-];
+const steps = ["npm install", "cp apps/web/.env.example apps/web/.env.local", "npm run db:start", "npm run dev"];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await getServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <main className="shell px-4 py-8 md:px-6 md:py-12">
       <section className="panel overflow-hidden rounded-[2rem]">
@@ -44,12 +47,39 @@ export default function HomePage() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Link
-                href="/dashboard"
-                className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)]"
-              >
-                Open dashboard starter
-              </Link>
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)]"
+                  >
+                    Open dashboard
+                  </Link>
+                  <form action={signOutAction}>
+                    <button
+                      type="submit"
+                      className="rounded-full border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white/70"
+                    >
+                      Sign out
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/signup"
+                    className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)]"
+                  >
+                    Create account
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="rounded-full border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white/70"
+                  >
+                    Log in
+                  </Link>
+                </>
+              )}
 
               <a
                 href="https://supabase.com/docs/guides/functions"
@@ -65,7 +95,9 @@ export default function HomePage() {
               <span className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d6bfaa]">
                 Quick start
               </span>
-              <span className="rounded-full bg-white/10 px-2 py-1 text-xs">Node 24 LTS</span>
+              <span className="rounded-full bg-white/10 px-2 py-1 text-xs">
+                {user ? user.email : "Email/password auth"}
+              </span>
             </div>
 
             <div className="space-y-3 font-[family-name:var(--font-mono)] text-sm">
