@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.98.0";
 
-import { classifyBot } from "./bots.ts";
+import { classifyTrackableBot } from "./bots.ts";
 import { json } from "./http.ts";
 
 export type TrackPayload = {
@@ -97,7 +97,12 @@ export async function insertEvent({
   }
 
   const resolvedUserAgent = userAgent ?? request.headers.get("user-agent") ?? "Unknown";
-  const bot = classifyBot(resolvedUserAgent);
+  const bot = classifyTrackableBot(resolvedUserAgent);
+
+  if (!bot) {
+    return json({ ok: true, ignored: "non-bot-user-agent" }, 202);
+  }
+
   const resolvedOccurredAt = occurredAt ?? new Date().toISOString();
   const ipAddress = getIpAddress(request);
   const resolvedIpHash = ipHash ?? (ipAddress ? await sha256Hex(ipAddress) : null);
@@ -122,6 +127,12 @@ export async function insertEvent({
       referrer: referrer ?? request.headers.get("referer"),
       title,
       source: source ?? "script",
+      classifier: {
+        id: bot.id,
+        isKnown: bot.isKnown,
+        detectionTarget: bot.detectionTarget,
+        matchedPattern: bot.matchedPattern,
+      },
     },
   });
 

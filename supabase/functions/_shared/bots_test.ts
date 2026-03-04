@@ -4,6 +4,7 @@ import {
   BOT_DEFINITIONS,
   UNKNOWN_BOT_CLASSIFICATION,
   classifyBot,
+  classifyTrackableBot,
   getPolicyOnlyBots,
   getSupportedRequestBots,
 } from "./bots.ts";
@@ -91,6 +92,23 @@ Deno.test("does not classify Google-Extended from HTTP request user agents", () 
   const result = classifyBot("Mozilla/5.0 Google-Extended");
 
   assertEquals(result, UNKNOWN_BOT_CLASSIFICATION);
+});
+
+Deno.test("tracks unknown bot-like user agents as Unknown", () => {
+  const result = classifyTrackableBot("Mozilla/5.0 ExampleCrawler/1.0");
+
+  assertEquals(result?.shouldTrack, true);
+  assertEquals(result?.name, "Unknown");
+  assertEquals(result?.platform, "Unknown");
+  assertEquals(result?.detectionTarget, "request_user_agent");
+});
+
+Deno.test("does not track obvious human browser traffic", () => {
+  const result = classifyTrackableBot(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/123.0 Safari/537.36",
+  );
+
+  assertEquals(result, null);
 });
 
 Deno.test("policy-only bots remain available in the registry for future use", () => {

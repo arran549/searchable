@@ -20,6 +20,10 @@ export type BotClassification = {
   matchedPattern: string | null;
 };
 
+export type TrackableBotClassification = BotClassification & {
+  shouldTrack: true;
+};
+
 function wordPattern(value: string) {
   return new RegExp(`\\b${value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
 }
@@ -114,6 +118,16 @@ const REQUEST_USER_AGENT_BOTS = BOT_DEFINITIONS.filter(
   (definition) => definition.detectionTarget === "request_user_agent",
 );
 
+const GENERIC_BOT_LIKE_MATCHERS = [
+  /\bbot\b/i,
+  /\bcrawl(?:er)?\b/i,
+  /\bspider\b/i,
+  /\bslurp\b/i,
+  /\barchiver\b/i,
+  /\bfetcher\b/i,
+  /\bpreview\b/i,
+];
+
 export const UNKNOWN_BOT_CLASSIFICATION: BotClassification = {
   id: null,
   name: "Unknown",
@@ -148,6 +162,36 @@ export function classifyBot(userAgent: string): BotClassification {
   }
 
   return UNKNOWN_BOT_CLASSIFICATION;
+}
+
+export function classifyTrackableBot(userAgent: string): TrackableBotClassification | null {
+  const classification = classifyBot(userAgent);
+
+  if (classification.isKnown) {
+    return {
+      ...classification,
+      shouldTrack: true,
+    };
+  }
+
+  const normalizedUserAgent = userAgent.trim();
+
+  if (!normalizedUserAgent) {
+    return null;
+  }
+
+  for (const matcher of GENERIC_BOT_LIKE_MATCHERS) {
+    if (matcher.test(normalizedUserAgent)) {
+      return {
+        ...UNKNOWN_BOT_CLASSIFICATION,
+        detectionTarget: "request_user_agent",
+        matchedPattern: matcher.source,
+        shouldTrack: true,
+      };
+    }
+  }
+
+  return null;
 }
 
 export function getSupportedRequestBots() {
