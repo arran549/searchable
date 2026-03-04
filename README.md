@@ -48,6 +48,8 @@ For local Supabase started via the CLI, use the local `anon` key from `npm run d
 - `npm run db:status` prints local Supabase connection info.
 - `npm run db:types` regenerates `apps/web/lib/database.types.ts` from the local schema.
 - `npm run fn:serve:track` serves the `track` edge function locally.
+- `npm run test:bot-classification` runs unit tests for the bot matcher.
+- `npm run test:functions` runs Deno tests under `supabase/functions`.
 
 ## What is already wired
 

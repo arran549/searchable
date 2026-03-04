@@ -1,0 +1,45 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@std/assert@*": "1.0.19",
+    "jsr:@std/internal@^1.0.12": "1.0.12"
+  },
+  "jsr": {
+    "@std/assert@1.0.19": {
+      "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.12": {
+      "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
+    }
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@biomejs/biome@2.4.5",
+        "npm:supabase@2.76.16"
+      ]
+    },
+    "members": {
+      "apps/web": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@supabase/ssr@0.9.0",
+            "npm:@supabase/supabase-js@2.98.0",
+            "npm:@tailwindcss/postcss@4.2.1",
+            "npm:@types/node@25.3.3",
+            "npm:@types/react-dom@19.2.3",
+            "npm:@types/react@19.2.14",
+            "npm:next@16.1.6",
+            "npm:react-dom@19.2.4",
+            "npm:react@19.2.4",
+            "npm:tailwindcss@4.2.1",
+            "npm:typescript@5.9.3"
+          ]
+        }
+      }
+    }
+  }
+}

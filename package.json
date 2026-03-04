@@ -19,7 +19,9 @@
     "db:reset": "npm exec supabase db reset",
     "db:status": "npm exec supabase status",
     "db:types": "npm exec supabase gen types typescript --local --schema public > apps/web/lib/database.types.ts",
-    "fn:serve:track": "npm exec supabase functions serve track --no-verify-jwt"
+    "fn:serve:track": "npm exec supabase functions serve track --no-verify-jwt",
+    "test:bot-classification": "deno test supabase/functions/_shared/bots_test.ts",
+    "test:functions": "deno test supabase/functions"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.5",
