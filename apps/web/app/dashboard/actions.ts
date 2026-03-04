@@ -25,7 +25,7 @@ export async function createSiteAction(formData: FormData) {
   const domain = normalizeDomain(rawDomain);
 
   if (!domain) {
-    redirect("/dashboard?error=Domain%20is%20required");
+    redirect("/dashboard/settings?error=Domain%20is%20required");
   }
 
   const supabase = await getServerSupabaseClient();
@@ -44,8 +44,8 @@ export async function createSiteAction(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/dashboard?error=${encodeURIComponent(error.message)}`);
+    redirect(`/dashboard/settings?error=${encodeURIComponent(error.message)}`);
   }
 
-  redirect("/dashboard?message=Site%20created");
+  redirect("/dashboard/settings?message=Site%20created");
 }

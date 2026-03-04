@@ -96,7 +96,7 @@ export default async function HomePage() {
                 Quick start
               </span>
               <span className="rounded-full bg-white/10 px-2 py-1 text-xs">
-                {user ? user.email : "Email/password auth"}
+                {user ? user.email : "Node 22 + Supabase auth"}
               </span>
             </div>
 

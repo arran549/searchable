@@ -1,0 +1,644 @@
+import { createSiteAction } from "@/app/dashboard/actions";
+import { AuthSubmitButton } from "@/components/auth-submit-button";
+import { CopyButton } from "@/components/copy-button";
+import { SiteInstallDialog } from "@/components/site-install-dialog";
+import { SiteScopeFilter } from "@/components/site-scope-filter";
+import type {
+  DashboardEvent,
+  DashboardPageSummary,
+  DashboardPlatform,
+  DashboardSite,
+  DashboardTimelinePoint,
+} from "@/lib/dashboard";
+import { formatRelativeDays, formatTimestamp, stripProtocol } from "@/lib/dashboard";
+import { getPixelInstallSnippet, getScriptInstallSnippet } from "@/lib/tracking-snippets";
+
+export function DashboardNotice({
+  message,
+  error,
+}: {
+  message?: string;
+  error?: string;
+}) {
+  if (!message && !error) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-3">
+      {message ? (
+        <div className="rounded-2xl border border-[var(--border)] bg-white/70 px-4 py-3 text-sm">
+          {message}
+        </div>
+      ) : null}
+      {error ? (
+        <div className="rounded-2xl border border-[#cf6f2e] bg-[#fff4ea] px-4 py-3 text-sm text-[#9d4511]">
+          {error}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function AnalyticsScope({
+  sites,
+  selectedSiteId,
+}: {
+  sites: DashboardSite[];
+  selectedSiteId?: string;
+}) {
+  const selectedSite = selectedSiteId ? sites.find((site) => site.id === selectedSiteId) ?? null : null;
+
+  return (
+    <div className="panel rounded-[1.5rem] p-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+            Analytics scope
+          </p>
+          <p className="mt-1 text-sm text-[var(--foreground)]">
+            {selectedSite
+              ? `Showing data for ${selectedSite.name || selectedSite.domain}.`
+              : "Showing combined data across all registered sites."}
+          </p>
+        </div>
+        <SiteScopeFilter
+          options={sites.map((site) => ({
+            id: site.id,
+            label: site.name ? `${site.name} (${site.domain})` : site.domain,
+          }))}
+          selectedSiteId={selectedSiteId}
+        />
+      </div>
+    </div>
+  );
+}
+
+export function SectionHeading({
+  eyebrow,
+  title,
+  description,
+  meta,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+  meta?: string;
+}) {
+  return (
+    <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted-foreground)]">
+          {eyebrow}
+        </p>
+        <h2 className="mt-1 text-2xl font-semibold tracking-[-0.03em] md:text-3xl">{title}</h2>
+        {description ? (
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
+            {description}
+          </p>
+        ) : null}
+      </div>
+
+      {meta ? (
+        <div className="rounded-full border border-[var(--border)] bg-white/60 px-4 py-2 text-sm text-[var(--muted-foreground)]">
+          {meta}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function StatsGrid({
+  stats,
+}: {
+  stats: Array<{ label: string; value: string; detail: string }>;
+}) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {stats.map((stat) => (
+        <article key={stat.label} className="panel rounded-[1.5rem] p-5">
+          <p className="mb-2 text-sm text-[var(--muted-foreground)]">{stat.label}</p>
+          <p className="text-4xl font-semibold tracking-[-0.04em]">{stat.value}</p>
+          <p className="mt-3 text-sm leading-6 text-[var(--muted-foreground)]">{stat.detail}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+export function SiteRegistrationCard() {
+  return (
+    <article className="panel rounded-[1.5rem] p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted-foreground)]">
+            Onboarding
+          </p>
+          <h3 className="mt-1 text-2xl font-semibold tracking-[-0.03em]">Register a site</h3>
+        </div>
+        <span className="rounded-full border border-[var(--border)] px-3 py-1 text-xs text-[var(--muted-foreground)]">
+          Required before install
+        </span>
+      </div>
+
+      <form action={createSiteAction} className="space-y-4">
+        <label className="block space-y-2">
+          <span className="text-sm font-medium">Domain</span>
+          <input
+            required
+            name="domain"
+            placeholder="example.com"
+            className="w-full rounded-2xl border border-[var(--border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--accent)]"
+          />
+        </label>
+
+        <label className="block space-y-2">
+          <span className="text-sm font-medium">Label</span>
+          <input
+            name="name"
+            placeholder="Marketing site, docs, blog..."
+            className="w-full rounded-2xl border border-[var(--border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--accent)]"
+          />
+        </label>
+
+        <AuthSubmitButton idleLabel="Create site" pendingLabel="Creating..." />
+      </form>
+
+      <div className="mt-5 grid gap-3">
+        {[
+          "Create or sign in to an account",
+          "Register each domain you control",
+          "Copy the generated script or pixel",
+          "Install it on the target site",
+          "Review events and platform activity here",
+        ].map((item, index) => (
+          <div
+            key={item}
+            className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-white/55 px-4 py-3 text-sm"
+          >
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent)] text-xs font-semibold text-white">
+              {index + 1}
+            </span>
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+export function PlatformPanel({
+  platforms,
+  limit,
+}: {
+  platforms: DashboardPlatform[];
+  limit?: number;
+}) {
+  const visiblePlatforms = typeof limit === "number" ? platforms.slice(0, limit) : platforms;
+  const topPlatformVisits = visiblePlatforms[0]?.visits ?? 1;
+
+  if (!visiblePlatforms.length) {
+    return (
+      <EmptyPanel message="No crawler traffic has been recorded yet. Register a site, install a snippet, and send a test event through Bruno or the tracker endpoint." />
+    );
+  }
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[1fr_0.82fr]">
+      <div className="space-y-4">
+        {visiblePlatforms.map((platform) => (
+          <div key={platform.name} className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">{platform.name}</span>
+              <span className="text-[var(--muted-foreground)]">{platform.visits} visits</span>
+            </div>
+            <div className="h-3 rounded-full bg-black/5">
+              <div
+                className={`h-3 rounded-full ${platform.tint}`}
+                style={{ width: `${(platform.visits / topPlatformVisits) * 100}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-[1.5rem] border border-[var(--border)] bg-white/55 p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+          Readout
+        </p>
+        <div className="mt-4 space-y-3">
+          {visiblePlatforms.map((platform) => (
+            <div
+              key={platform.name}
+              className="flex items-center justify-between rounded-xl border border-[var(--border)] px-4 py-3"
+            >
+              <div className="flex items-center gap-3">
+                <span className={`inline-flex h-3 w-3 rounded-full ${platform.tint}`} />
+                <span className="text-sm font-medium">{platform.name}</span>
+              </div>
+              <span className="text-sm text-[var(--muted-foreground)]">{platform.visits}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function PageLeaderboard({
+  pages,
+  limit,
+}: {
+  pages: DashboardPageSummary[];
+  limit?: number;
+}) {
+  const visiblePages = typeof limit === "number" ? pages.slice(0, limit) : pages;
+
+  if (!visiblePages.length) {
+    return (
+      <EmptyPanel message="Once crawler events arrive, this section will rank the most visited pages across your registered sites." />
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {visiblePages.map((page, index) => (
+        <div
+          key={page.path}
+          className="grid gap-3 rounded-[1.5rem] border border-[var(--border)] bg-white/55 p-4 md:grid-cols-[auto_1fr_auto]"
+        >
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#132230] text-sm font-semibold text-white">
+            {index + 1}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate font-[family-name:var(--font-mono)] text-sm font-medium">
+              {page.path}
+            </p>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              Dominant crawler: {page.bot} / Platform: {page.platform}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-semibold tracking-[-0.03em]">{page.visits}</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+              visits
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function ActivityFeed({
+  events,
+  limit,
+}: {
+  events: DashboardEvent[];
+  limit?: number;
+}) {
+  const visibleEvents = typeof limit === "number" ? events.slice(0, limit) : events;
+
+  if (!visibleEvents.length) {
+    return (
+      <EmptyPanel message="No activity yet. Use the script install, HTML pixel fallback, or Bruno request to seed the first tracked event." />
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {visibleEvents.map((event) => (
+        <div key={event.id} className="rounded-[1.5rem] border border-[var(--border)] bg-white/55 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-base font-semibold">
+                {event.bot_name} / {event.platform}
+              </p>
+              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                {event.bot_type} / {event.source}
+              </p>
+            </div>
+            <div className="text-right text-sm text-[var(--muted-foreground)]">
+              <p>{formatTimestamp(event.occurred_at)}</p>
+              <p>{stripProtocol(event.page_url)}</p>
+            </div>
+          </div>
+
+          <div className="mt-3 rounded-xl border border-[var(--border)] bg-white/60 px-3 py-2">
+            <p className="font-[family-name:var(--font-mono)] text-xs text-[var(--muted-foreground)]">
+              {event.user_agent}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function ActivityTrend({
+  points,
+  caption,
+}: {
+  points: DashboardTimelinePoint[];
+  caption: string;
+}) {
+  if (!points.length) {
+    return (
+      <EmptyPanel message="No trend data yet for the selected filters. Expand the range or remove filters to see event movement over time." />
+    );
+  }
+
+  const peak = points.reduce((max, point) => Math.max(max, point.visits), 1);
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm leading-6 text-[var(--muted-foreground)]">{caption}</p>
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-6">
+        {points.map((point) => (
+          <div
+            key={point.label}
+            className="rounded-xl border border-[var(--border)] bg-white/60 px-3 py-3 text-center"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+              {point.label}
+            </p>
+            <div className="mt-2 h-2 rounded-full bg-black/6">
+              <div
+                className="h-2 rounded-full bg-[#c7652b]"
+                style={{ width: `${Math.max((point.visits / peak) * 100, point.visits ? 10 : 0)}%` }}
+              />
+            </div>
+            <p className="mt-2 text-sm font-semibold">{point.visits}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function InstallSnippetGrid({
+  sites,
+  supabaseUrl,
+}: {
+  sites: DashboardSite[];
+  supabaseUrl: string;
+}) {
+  if (!sites.length) {
+    return (
+      <EmptyPanel message="No sites registered yet. Create one and this section will generate copy-paste install code automatically." />
+    );
+  }
+
+  return (
+    <div className="grid gap-4 xl:grid-cols-2">
+      {sites.map((site) => (
+        <article key={site.id} className="panel rounded-[1.5rem] p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-lg font-semibold tracking-[-0.02em]">{site.name || site.domain}</p>
+              <p className="text-sm text-[var(--muted-foreground)]">{site.domain}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-full border border-[var(--border)] px-3 py-1 text-xs text-[var(--muted-foreground)]">
+                created {formatRelativeDays(site.created_at)}
+              </span>
+              <span className="rounded-full border border-[var(--border)] px-3 py-1 text-xs text-[var(--muted-foreground)]">
+                {site.verified_at ? "verified" : "unverified"}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-2">
+              <InstallMethodCard
+                title="Recommended"
+                subtitle="JavaScript tracker"
+                body="Best for modern sites. Captures page context and posts through the tracking endpoint."
+              />
+              <InstallMethodCard
+                title="Fallback"
+                subtitle="HTML pixel"
+                body="Use this for static HTML, CMS blocks, or environments where scripts are harder to inject."
+              />
+            </div>
+
+            <SnippetBlock
+              label="Recommended script"
+              code={getScriptInstallSnippet(supabaseUrl, site.tracking_token)}
+              copyLabel="Copy script"
+            />
+            <SnippetBlock
+              label="HTML fallback pixel"
+              code={getPixelInstallSnippet(supabaseUrl, site.tracking_token)}
+              copyLabel="Copy pixel"
+            />
+
+            <div className="rounded-[1.5rem] border border-[var(--border)] bg-white/55 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+                    Tracking token
+                  </p>
+                  <p className="mt-2 break-all font-[family-name:var(--font-mono)] text-sm text-[var(--foreground)]">
+                    {site.tracking_token}
+                  </p>
+                </div>
+                <CopyButton value={site.tracking_token} label="Copy token" />
+              </div>
+            </div>
+
+            <div className="grid gap-3">
+              {[
+                "Paste the script into the global site template if you want full-page coverage.",
+                "Use the pixel when the target environment only supports raw HTML embeds.",
+                "After deployment, send a known crawler event and confirm it appears in Activity.",
+              ].map((item, index) => (
+                <div
+                  key={item}
+                  className="flex items-start gap-3 rounded-2xl border border-[var(--border)] bg-white/55 px-4 py-3 text-sm leading-6 text-[var(--muted-foreground)]"
+                >
+                  <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#132230] text-xs font-semibold text-white">
+                    {index + 1}
+                  </span>
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+export function SiteList({
+  sites,
+  supabaseUrl,
+}: {
+  sites: DashboardSite[];
+  supabaseUrl: string;
+}) {
+  if (!sites.length) {
+    return (
+      <EmptyPanel message="No sites registered yet. Create your first domain to generate install code and start collecting crawler events." />
+    );
+  }
+
+  return (
+    <div className="grid gap-3">
+      {sites.map((site) => (
+        <article
+          key={site.id}
+          className="rounded-[1.5rem] border border-[var(--border)] bg-white/60 p-4"
+        >
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-base font-semibold">{site.name || site.domain}</p>
+                <span className="rounded-full border border-[var(--border)] bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+                  {site.verified_at ? "Verified" : "Ready to install"}
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-[var(--muted-foreground)]">{site.domain}</p>
+              <p className="mt-3 break-all font-[family-name:var(--font-mono)] text-xs leading-6 text-[var(--muted-foreground)]">
+                {site.tracking_token}
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[360px]">
+              <div className="rounded-2xl border border-[var(--border)] bg-white/70 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+                  Created
+                </p>
+                <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
+                  {formatRelativeDays(site.created_at)}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[var(--border)] bg-white/70 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+                  Verification
+                </p>
+                <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
+                  {site.verified_at ? "Complete" : "Pending"}
+                </p>
+              </div>
+              <div className="sm:col-span-2 flex items-center justify-start sm:justify-end">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                  <SiteInstallDialog site={site} supabaseUrl={supabaseUrl} />
+                  <CopyButton value={site.tracking_token} label="Copy token" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
+            <p className="text-sm text-[var(--muted-foreground)]">
+              Use this domain’s tracking token to deploy the script or pixel install on the target
+              website.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-full border border-[var(--border)] bg-white/75 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+                Script available
+              </span>
+              <span className="rounded-full border border-[var(--border)] bg-white/75 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+                Pixel fallback available
+              </span>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+export function SiteSnapshotCards({ sites }: { sites: DashboardSite[] }) {
+  const verifiedCount = sites.filter((site) => Boolean(site.verified_at)).length;
+  const unverifiedCount = sites.length - verifiedCount;
+  const newestSite = sites[0] ?? null;
+
+  return (
+    <div className="grid gap-3 md:grid-cols-3">
+      {[
+        {
+          label: "Registered sites",
+          value: String(sites.length),
+          detail: sites.length ? "Domains currently instrumented in the workspace" : "No domains registered yet",
+        },
+        {
+          label: "Verification status",
+          value: verifiedCount ? `${verifiedCount} verified` : "0 verified",
+          detail: unverifiedCount
+            ? `${unverifiedCount} still ready for verification or install`
+            : "All registered domains are verified",
+        },
+        {
+          label: "Newest domain",
+          value: newestSite?.domain ?? "No sites yet",
+          detail: newestSite
+            ? `Added ${formatRelativeDays(newestSite.created_at)}`
+            : "Create your first site to unlock install snippets",
+        },
+      ].map((item) => (
+        <article key={item.label} className="rounded-[1.5rem] border border-[var(--border)] bg-white/55 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+            {item.label}
+          </p>
+          <p className="mt-2 text-2xl font-semibold tracking-[-0.03em]">{item.value}</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">{item.detail}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function SnippetBlock({
+  label,
+  code,
+  copyLabel,
+}: {
+  label: string;
+  code: string;
+  copyLabel: string;
+}) {
+  return (
+    <div className="rounded-[1.5rem] border border-[var(--border)] bg-white/55 p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+          {label}
+        </p>
+        <CopyButton value={code} label={copyLabel} />
+      </div>
+      <pre className="overflow-x-auto rounded-2xl border border-[var(--border)] bg-[#fffdf8] p-3 text-xs leading-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
+}
+
+function EmptyPanel({ message }: { message: string }) {
+  return (
+    <div className="rounded-[1.5rem] border border-[var(--border)] bg-white/55 p-5 text-sm leading-7 text-[var(--muted-foreground)]">
+      {message}
+    </div>
+  );
+}
+
+function InstallMethodCard({
+  title,
+  subtitle,
+  body,
+}: {
+  title: string;
+  subtitle: string;
+  body: string;
+}) {
+  return (
+    <div className="rounded-[1.5rem] border border-[var(--border)] bg-white/55 p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+        {title}
+      </p>
+      <p className="mt-2 text-base font-semibold">{subtitle}</p>
+      <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">{body}</p>
+    </div>
+  );
+}
