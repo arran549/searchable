@@ -33,6 +33,9 @@ create index if not exists crawler_events_platform_idx
 create index if not exists crawler_events_page_path_idx
   on public.crawler_events (page_path);
 
+create index if not exists sites_user_id_idx
+  on public.sites (user_id);
+
 alter table public.sites enable row level security;
 alter table public.crawler_events enable row level security;
 
@@ -40,20 +43,26 @@ create policy "Users can view their sites"
   on public.sites
   for select
   to authenticated
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 create policy "Users can insert their sites"
   on public.sites
   for insert
   to authenticated
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
 create policy "Users can update their sites"
   on public.sites
   for update
   to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
+
+create policy "Users can delete their sites"
+  on public.sites
+  for delete
+  to authenticated
+  using ((select auth.uid()) = user_id);
 
 create policy "Users can view events for their sites"
   on public.crawler_events
@@ -64,6 +73,22 @@ create policy "Users can view events for their sites"
       select 1
       from public.sites
       where public.sites.id = crawler_events.site_id
-        and public.sites.user_id = auth.uid()
+        and public.sites.user_id = (select auth.uid())
     )
   );
+
+create policy "Users can delete events for their sites"
+  on public.crawler_events
+  for delete
+  to authenticated
+  using (
+    exists (
+      select 1
+      from public.sites
+      where public.sites.id = crawler_events.site_id
+        and public.sites.user_id = (select auth.uid())
+    )
+  );
+
+-- Intentionally no INSERT/UPDATE policy on crawler_events for anon/authenticated.
+-- Event ingestion should happen through a trusted Edge Function using a secret/service key.
