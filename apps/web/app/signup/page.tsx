@@ -12,6 +12,25 @@ type SignupPageProps = {
   }>;
 };
 
+const onboardingSteps = [
+  {
+    title: "Create account",
+    detail: "Spin up a protected workspace with simple email and password auth.",
+  },
+  {
+    title: "Register domain",
+    detail: "Add your website so tracking tokens and install snippets are generated.",
+  },
+  {
+    title: "Install snippet",
+    detail: "Deploy the script in your shared template or use the pixel fallback.",
+  },
+  {
+    title: "Review analytics",
+    detail: "Confirm first events and inspect crawler/platform activity in dashboard views.",
+  },
+];
+
 export default async function SignupPage({ searchParams }: SignupPageProps) {
   const { error, message } = await searchParams;
   const supabase = await getServerSupabaseClient();
@@ -57,34 +76,41 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
           </p>
         </div>
 
-        <div className="panel rounded-[2rem] bg-[#132230] p-6 text-[#f6f0e7] md:p-8">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-[#d6bfaa]">
-            Fast install
-          </p>
-          <h1 className="max-w-lg text-4xl font-semibold tracking-[-0.05em]">
-            One account, one dashboard, one install flow.
-          </h1>
-          <p className="mt-4 max-w-lg text-sm leading-7 text-[#d6bfaa]">
-            The goal here is not enterprise auth complexity. It is a clean email/password flow
-            that gets you into the product quickly for the take-home.
-          </p>
+        <aside className="relative overflow-hidden rounded-[2rem] border border-[#203042] bg-[#112033] p-6 text-[#fef9e6] shadow-[var(--shadow)] md:p-8">
+          <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-[#f59e0b]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-10 h-52 w-52 rounded-full bg-[#3ecf8e]/20 blur-3xl" />
 
-          <div className="mt-8 grid gap-3">
-            {[
-              "Create account",
-              "Add website domain",
-              "Copy tracking snippet",
-              "See crawler events",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm"
-              >
-                {item}
-              </div>
-            ))}
+          <div className="relative">
+            <p className="mb-4 inline-flex rounded-full border border-white/20 bg-white/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#fef2d6]">
+              Fast install
+            </p>
+            <h1 className="max-w-lg text-4xl font-semibold tracking-[-0.05em] text-white">
+              One account, one dashboard, one install flow.
+            </h1>
+            <p className="mt-5 max-w-lg text-base leading-7 text-[#fef2d6]">
+              Built for speed: authenticate, install tracking, and confirm AI crawler analytics without setup overhead.
+            </p>
+
+            <div className="mt-8 grid gap-4">
+              {onboardingSteps.map((step, index) => (
+                <article
+                  key={step.title}
+                  className="group rounded-2xl border border-white/20 bg-white/10 px-5 py-4 transition hover:border-white/40 hover:bg-white/15"
+                >
+                  <div className="flex items-start gap-4">
+                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/30 bg-[#0f1b2b] text-sm font-semibold text-white">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <p className="text-base font-semibold text-white">{step.title}</p>
+                      <p className="mt-1.5 text-sm leading-6 text-[#fef2d6]">{step.detail}</p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
-        </div>
+        </aside>
       </div>
     </main>
   );

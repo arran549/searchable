@@ -25,34 +25,56 @@ export async function GET(request: NextRequest) {
   const platform = normalizeDashboardFilterValue(request.nextUrl.searchParams.get("platform") ?? undefined);
   const botType = normalizeDashboardFilterValue(request.nextUrl.searchParams.get("botType") ?? undefined);
 
-  let query = supabase
-    .from("crawler_events")
-    .select("occurred_at, page_url, bot_name, platform, bot_type, user_agent")
-    .gte("occurred_at", getDateRangeStartIso(range))
-    .order("occurred_at", { ascending: false })
-    .limit(5000);
+  const events = [];
+  const pageSize = 1000;
+  let from = 0;
+  let hasMore = true;
+  let error: { message: string } | null = null;
 
-  if (site) {
-    query = query.eq("site_id", site);
-  }
-  if (platform) {
-    query = query.eq("platform", platform);
-  }
-  if (botType) {
-    query = query.eq("bot_type", botType);
-  }
-  if (traffic === "ai") {
-    query = query.neq("bot_type", "non_ai");
-  }
+  while (hasMore) {
+    let query = supabase
+      .from("crawler_events")
+      .select("occurred_at, page_url, bot_name, platform, bot_type, user_agent")
+      .gte("occurred_at", getDateRangeStartIso(range))
+      .order("occurred_at", { ascending: false })
+      .range(from, from + pageSize - 1);
 
-  const { data: events, error } = await query;
+    if (site) {
+      query = query.eq("site_id", site);
+    }
+    if (platform) {
+      query = query.eq("platform", platform);
+    }
+    if (botType) {
+      query = query.eq("bot_type", botType);
+    }
+    if (traffic === "ai") {
+      query = query.neq("bot_type", "non_ai");
+    }
+
+    const { data: page, error: pageError } = await query;
+
+    if (pageError) {
+      error = pageError;
+      break;
+    }
+
+    if (!page?.length) {
+      hasMore = false;
+      break;
+    }
+
+    events.push(...page);
+    hasMore = page.length === pageSize;
+    from += pageSize;
+  }
 
   if (error) {
     return NextResponse.json({ error: "Unable to export crawler events" }, { status: 500 });
   }
 
   const header = ["timestamp", "page_url", "bot_name", "platform", "bot_type", "user_agent"];
-  const rows = (events ?? []).map((event) =>
+  const rows = events.map((event) =>
     [
       event.occurred_at,
       event.page_url,
