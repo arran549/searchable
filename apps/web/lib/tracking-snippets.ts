@@ -15,9 +15,17 @@ export function getTrackingUrls(supabaseUrl: string) {
   };
 }
 
-export function getScriptInstallSnippet(supabaseUrl: string, trackingToken: string) {
+export function getScriptInstallSnippet(
+  supabaseUrl: string,
+  trackingToken: string,
+  options?: { spa?: boolean },
+) {
   const { scriptUrl } = getTrackingUrls(supabaseUrl);
-  const url = `${scriptUrl}?token=${encodeURIComponent(trackingToken)}`;
+  const params = new URLSearchParams({ token: trackingToken });
+  if (options?.spa) {
+    params.set("spa", "1");
+  }
+  const url = `${scriptUrl}?${params.toString()}`;
 
   return `<script async src="${escapeAttribute(url)}"></script>`;
 }

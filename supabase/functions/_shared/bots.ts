@@ -1,4 +1,4 @@
-export type BotType = "training" | "search" | "assistant" | "unknown";
+export type BotType = "training" | "search" | "assistant" | "unknown" | "non_ai";
 export type DetectionTarget = "request_user_agent" | "robots_policy";
 
 export type BotDefinition = {
@@ -138,6 +138,16 @@ export const UNKNOWN_BOT_CLASSIFICATION: BotClassification = {
   matchedPattern: null,
 };
 
+export const NON_AI_CLASSIFICATION: BotClassification = {
+  id: "non-ai-traffic",
+  name: "Non-AI",
+  platform: "Non-AI",
+  type: "non_ai",
+  isKnown: false,
+  detectionTarget: "request_user_agent",
+  matchedPattern: null,
+};
+
 export function classifyBot(userAgent: string): BotClassification {
   const normalizedUserAgent = userAgent.trim();
 
@@ -191,7 +201,10 @@ export function classifyTrackableBot(userAgent: string): TrackableBotClassificat
     }
   }
 
-  return null;
+  return {
+    ...NON_AI_CLASSIFICATION,
+    shouldTrack: true,
+  };
 }
 
 export function getSupportedRequestBots() {

@@ -335,6 +335,73 @@ export function ActivityFeed({
   );
 }
 
+export function ActivityTable({
+  events,
+  limit,
+}: {
+  events: DashboardEvent[];
+  limit?: number;
+}) {
+  const visibleEvents = typeof limit === "number" ? events.slice(0, limit) : events;
+
+  if (!visibleEvents.length) {
+    return (
+      <EmptyPanel message="No activity yet. Use the script install, HTML pixel fallback, or Bruno request to seed the first tracked event." />
+    );
+  }
+
+  return (
+    <div className="max-h-[560px] overflow-auto rounded-[1.5rem] border border-[var(--border)] bg-white/60">
+      <table className="min-w-[920px] w-full border-collapse text-sm">
+        <thead className="bg-white/90">
+          <tr>
+            <th className="sticky top-0 z-10 border-b border-[var(--border)] bg-white/90 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+              Time
+            </th>
+            <th className="sticky top-0 z-10 border-b border-[var(--border)] bg-white/90 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+              Bot
+            </th>
+            <th className="sticky top-0 z-10 border-b border-[var(--border)] bg-white/90 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+              Platform
+            </th>
+            <th className="sticky top-0 z-10 border-b border-[var(--border)] bg-white/90 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+              Type
+            </th>
+            <th className="sticky top-0 z-10 border-b border-[var(--border)] bg-white/90 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+              Source
+            </th>
+            <th className="sticky top-0 z-10 border-b border-[var(--border)] bg-white/90 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+              Page
+            </th>
+            <th className="sticky top-0 z-10 border-b border-[var(--border)] bg-white/90 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+              User agent
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {visibleEvents.map((event) => (
+            <tr key={event.id} className="align-top">
+              <td className="border-b border-[var(--border)] px-3 py-2 text-[var(--muted-foreground)] whitespace-nowrap">
+                {formatTimestamp(event.occurred_at)}
+              </td>
+              <td className="border-b border-[var(--border)] px-3 py-2 font-medium">{event.bot_name}</td>
+              <td className="border-b border-[var(--border)] px-3 py-2">{event.platform}</td>
+              <td className="border-b border-[var(--border)] px-3 py-2">{event.bot_type}</td>
+              <td className="border-b border-[var(--border)] px-3 py-2">{event.source}</td>
+              <td className="border-b border-[var(--border)] px-3 py-2 font-[family-name:var(--font-mono)] text-xs text-[var(--muted-foreground)]">
+                {stripProtocol(event.page_url)}
+              </td>
+              <td className="border-b border-[var(--border)] px-3 py-2 font-[family-name:var(--font-mono)] text-xs text-[var(--muted-foreground)]">
+                {event.user_agent}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function ActivityTrend({
   points,
   caption,
@@ -424,7 +491,7 @@ export function InstallSnippetGrid({
 
             <SnippetBlock
               label="Recommended script"
-              code={getScriptInstallSnippet(supabaseUrl, site.tracking_token)}
+              code={getScriptInstallSnippet(supabaseUrl, site.tracking_token, { spa: true })}
               copyLabel="Copy script"
             />
             <SnippetBlock
@@ -496,13 +563,10 @@ export function SiteList({
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-base font-semibold">{site.name || site.domain}</p>
                 <span className="rounded-full border border-[var(--border)] bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-                  {site.verified_at ? "Verified" : "Ready to install"}
+                  {site.latest_event_at ? "Installed" : "Ready to install"}
                 </span>
               </div>
               <p className="mt-1 text-sm text-[var(--muted-foreground)]">{site.domain}</p>
-              <p className="mt-3 break-all font-[family-name:var(--font-mono)] text-xs leading-6 text-[var(--muted-foreground)]">
-                {site.tracking_token}
-              </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[360px]">
@@ -525,7 +589,6 @@ export function SiteList({
               <div className="sm:col-span-2 flex items-center justify-start sm:justify-end">
                 <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                   <SiteInstallDialog site={site} supabaseUrl={supabaseUrl} />
-                  <CopyButton value={site.tracking_token} label="Copy token" />
                 </div>
               </div>
             </div>

@@ -87,21 +87,27 @@ export async function insertEvent({
   request,
 }: TrackPayload & { request: Request }) {
   if (!token || !pageUrl) {
-    return json({ error: "token and pageUrl are required" }, 400);
+    return json({ error: "token and pageUrl are required" }, 400, request);
   }
 
   const site = await resolveSiteByToken(token);
 
   if (!site) {
-    return json({ error: "Invalid tracking token" }, 404);
+    return json({ error: "Invalid tracking token" }, 404, request);
   }
 
   const resolvedUserAgent = userAgent ?? request.headers.get("user-agent") ?? "Unknown";
   const bot = classifyTrackableBot(resolvedUserAgent);
-
-  if (!bot) {
-    return json({ ok: true, ignored: "non-bot-user-agent" }, 202);
-  }
+  const resolvedBot = bot ?? {
+    id: "non-ai-traffic",
+    name: "Non-AI",
+    platform: "Non-AI",
+    type: "non_ai" as const,
+    isKnown: false,
+    detectionTarget: "request_user_agent" as const,
+    matchedPattern: null,
+    shouldTrack: true as const,
+  };
 
   const resolvedOccurredAt = occurredAt ?? new Date().toISOString();
   const ipAddress = getIpAddress(request);
@@ -112,9 +118,9 @@ export async function insertEvent({
     site_id: site.id,
     occurred_at: resolvedOccurredAt,
     user_agent: resolvedUserAgent,
-    bot_name: bot.name,
-    platform: bot.platform,
-    bot_type: bot.type,
+    bot_name: resolvedBot.name,
+    platform: resolvedBot.platform,
+    bot_type: resolvedBot.type,
     page_url: pageUrl,
     page_path: getPagePath(pageUrl, pagePath),
     ip_hash: resolvedIpHash,
@@ -128,17 +134,17 @@ export async function insertEvent({
       title,
       source: source ?? "script",
       classifier: {
-        id: bot.id,
-        isKnown: bot.isKnown,
-        detectionTarget: bot.detectionTarget,
-        matchedPattern: bot.matchedPattern,
+        id: resolvedBot.id,
+        isKnown: resolvedBot.isKnown,
+        detectionTarget: resolvedBot.detectionTarget,
+        matchedPattern: resolvedBot.matchedPattern,
       },
     },
   });
 
   if (error) {
-    return json({ error: error.message }, 500);
+    return json({ error: error.message }, 500, request);
   }
 
-  return json({ ok: true }, 202);
+  return json({ ok: true }, 202, request);
 }

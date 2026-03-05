@@ -1,6 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { normalizeDashboardFilterValue, resolveDashboardDateRange } from "@/lib/dashboard";
+import {
+  normalizeDashboardFilterValue,
+  resolveDashboardDateRange,
+  resolveDashboardTrafficScope,
+} from "@/lib/dashboard";
 import { getServerSupabaseClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
@@ -14,6 +18,9 @@ export async function GET(request: NextRequest) {
   }
 
   const range = resolveDashboardDateRange(request.nextUrl.searchParams.get("range") ?? undefined);
+  const traffic = resolveDashboardTrafficScope(
+    request.nextUrl.searchParams.get("traffic") ?? undefined,
+  );
   const site = normalizeDashboardFilterValue(request.nextUrl.searchParams.get("site") ?? undefined);
   const platform = normalizeDashboardFilterValue(request.nextUrl.searchParams.get("platform") ?? undefined);
   const botType = normalizeDashboardFilterValue(request.nextUrl.searchParams.get("botType") ?? undefined);
@@ -33,6 +40,9 @@ export async function GET(request: NextRequest) {
   }
   if (botType) {
     query = query.eq("bot_type", botType);
+  }
+  if (traffic === "ai") {
+    query = query.neq("bot_type", "non_ai");
   }
 
   const { data: events, error } = await query;

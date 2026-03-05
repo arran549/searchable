@@ -17,7 +17,9 @@ const platformTints = [
 export type DashboardSite = Pick<
   SiteRow,
   "id" | "domain" | "name" | "tracking_token" | "verification_token" | "created_at" | "verified_at"
->;
+> & {
+  latest_event_at: string | null;
+};
 
 export type DashboardEvent = Pick<
   EventRow,
@@ -48,6 +50,8 @@ export type DashboardPageSummary = {
 
 export const dashboardDateRanges = ["24h", "7d", "30d"] as const;
 export type DashboardDateRange = (typeof dashboardDateRanges)[number];
+export const dashboardTrafficScopes = ["ai", "all"] as const;
+export type DashboardTrafficScope = (typeof dashboardTrafficScopes)[number];
 
 export type DashboardTimelinePoint = {
   label: string;
@@ -59,6 +63,7 @@ type DashboardDataOptions = {
   dateRange?: DashboardDateRange;
   platform?: string;
   botType?: string;
+  trafficScope?: DashboardTrafficScope;
   eventLimit?: number;
 };
 
@@ -76,6 +81,16 @@ export function normalizeDashboardFilterValue(value?: string) {
   }
 
   return value;
+}
+
+export function resolveDashboardTrafficScope(value?: string): DashboardTrafficScope {
+  if (!value) {
+    return "ai";
+  }
+
+  return dashboardTrafficScopes.includes(value as DashboardTrafficScope)
+    ? (value as DashboardTrafficScope)
+    : "ai";
 }
 
 export async function requireDashboardSession() {
@@ -96,13 +111,38 @@ export async function getDashboardData(options: DashboardDataOptions = {}) {
   const dateRange = resolveDashboardDateRange(options.dateRange);
   const selectedPlatform = normalizeDashboardFilterValue(options.platform);
   const selectedBotType = normalizeDashboardFilterValue(options.botType);
+  const trafficScope = resolveDashboardTrafficScope(options.trafficScope);
   const eventLimit = options.eventLimit ?? 1000;
   const { data: sites, error: sitesError } = await supabase
     .from("sites")
     .select("id, domain, name, tracking_token, verification_token, created_at, verified_at")
     .order("created_at", { ascending: false });
 
-  const safeSites = sitesError ? [] : ((sites ?? []) as DashboardSite[]);
+  const safeSiteRows = sitesError ? [] : ((sites ?? []) as SiteRow[]);
+  const latestEventBySiteId = new Map<string, string>();
+
+  if (safeSiteRows.length) {
+    const siteIds = safeSiteRows.map((site) => site.id);
+    const { data: siteEvents, error: siteEventsError } = await supabase
+      .from("crawler_events")
+      .select("site_id, occurred_at")
+      .in("site_id", siteIds)
+      .order("occurred_at", { ascending: false })
+      .limit(5000);
+
+    if (!siteEventsError) {
+      for (const event of (siteEvents ?? []) as Array<Pick<EventRow, "site_id" | "occurred_at">>) {
+        if (!latestEventBySiteId.has(event.site_id)) {
+          latestEventBySiteId.set(event.site_id, event.occurred_at);
+        }
+      }
+    }
+  }
+
+  const safeSites: DashboardSite[] = safeSiteRows.map((site) => ({
+    ...site,
+    latest_event_at: latestEventBySiteId.get(site.id) ?? null,
+  }));
   const selectedSiteId = options.siteId && safeSites.some((site) => site.id === options.siteId)
     ? options.siteId
     : undefined;
@@ -122,6 +162,10 @@ export async function getDashboardData(options: DashboardDataOptions = {}) {
   const { data: events, error: eventsError } = await eventsQuery;
   const baseEvents = eventsError ? [] : ((events ?? []) as DashboardEvent[]);
   const safeEvents = baseEvents.filter((event) => {
+    if (trafficScope === "ai" && event.bot_type === "non_ai") {
+      return false;
+    }
+
     if (selectedPlatform && event.platform !== selectedPlatform) {
       return false;
     }
@@ -202,10 +246,20 @@ export async function getDashboardData(options: DashboardDataOptions = {}) {
     .sort((left, right) => right.visits - left.visits);
 
   const availablePlatforms = Array.from(
-    new Set(baseEvents.map((event) => event.platform).filter(Boolean)),
+    new Set(
+      baseEvents
+        .filter((event) => trafficScope === "all" || event.bot_type !== "non_ai")
+        .map((event) => event.platform)
+        .filter(Boolean),
+    ),
   ).sort((left, right) => left.localeCompare(right));
   const availableBotTypes = Array.from(
-    new Set(baseEvents.map((event) => event.bot_type).filter(Boolean)),
+    new Set(
+      baseEvents
+        .filter((event) => trafficScope === "all" || event.bot_type !== "non_ai")
+        .map((event) => event.bot_type)
+        .filter(Boolean),
+    ),
   ).sort((left, right) => left.localeCompare(right));
   const timeline = buildTimeline(safeEvents, dateRange);
 
@@ -226,6 +280,7 @@ export async function getDashboardData(options: DashboardDataOptions = {}) {
       dateRange,
       selectedPlatform,
       selectedBotType,
+      trafficScope,
       availablePlatforms,
       availableBotTypes,
       unfilteredCount: baseEvents.length,
@@ -241,8 +296,11 @@ export function formatTimestamp(value: string) {
 }
 
 export function formatRelativeDays(value: string) {
-  const diffMs = Date.now() - new Date(value).getTime();
-  const diffDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+  const now = new Date();
+  const target = new Date(value);
+  const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime();
+  const diffDays = Math.floor((nowDay - targetDay) / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) {
     return "today";
@@ -250,6 +308,10 @@ export function formatRelativeDays(value: string) {
 
   if (diffDays === 1) {
     return "1 day ago";
+  }
+
+  if (diffDays < 0) {
+    return `in ${Math.abs(diffDays)} days`;
   }
 
   return `${diffDays} days ago`;

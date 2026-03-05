@@ -3,10 +3,11 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { startTransition } from "react";
 
-import type { DashboardDateRange } from "@/lib/dashboard";
+import type { DashboardDateRange, DashboardTrafficScope } from "@/lib/dashboard";
 
 type DashboardAnalyticsFiltersProps = {
   selectedDateRange: DashboardDateRange;
+  trafficScope: DashboardTrafficScope;
   selectedPlatform?: string;
   selectedBotType?: string;
   platforms: string[];
@@ -15,6 +16,7 @@ type DashboardAnalyticsFiltersProps = {
 
 export function DashboardAnalyticsFilters({
   selectedDateRange,
+  trafficScope,
   selectedPlatform,
   selectedBotType,
   platforms,
@@ -24,10 +26,10 @@ export function DashboardAnalyticsFilters({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  function onChange(key: "range" | "platform" | "botType", value: string) {
+  function onChange(key: "range" | "traffic" | "platform" | "botType", value: string) {
     const params = new URLSearchParams(searchParams.toString());
 
-    if (value === "all") {
+    if (value === "all" && key !== "traffic") {
       params.delete(key);
     } else {
       params.set(key, value);
@@ -46,7 +48,7 @@ export function DashboardAnalyticsFilters({
           Filters
         </p>
 
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           <FilterSelect
             label="Date range"
             value={selectedDateRange}
@@ -55,6 +57,15 @@ export function DashboardAnalyticsFilters({
               { value: "24h", label: "Last 24 hours" },
               { value: "7d", label: "Last 7 days" },
               { value: "30d", label: "Last 30 days" },
+            ]}
+          />
+          <FilterSelect
+            label="Traffic"
+            value={trafficScope}
+            onChange={(next) => onChange("traffic", next)}
+            options={[
+              { value: "ai", label: "AI crawlers only" },
+              { value: "all", label: "All page access" },
             ]}
           />
           <FilterSelect

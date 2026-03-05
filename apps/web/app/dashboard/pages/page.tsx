@@ -1,11 +1,17 @@
 import { DashboardAnalyticsFilters } from "@/components/dashboard-analytics-filters";
 import { ActivityTrend, AnalyticsScope, PageLeaderboard, SectionHeading, SiteList } from "@/components/dashboard-sections";
 import { env } from "@/lib/env";
-import { getDashboardData, normalizeDashboardFilterValue, resolveDashboardDateRange } from "@/lib/dashboard";
+import {
+  getDashboardData,
+  normalizeDashboardFilterValue,
+  resolveDashboardDateRange,
+  resolveDashboardTrafficScope,
+} from "@/lib/dashboard";
 
 type DashboardPagesPageProps = {
   searchParams: Promise<{
     botType?: string;
+    traffic?: string;
     platform?: string;
     range?: string;
     site?: string;
@@ -15,10 +21,11 @@ type DashboardPagesPageProps = {
 export default async function DashboardPagesPage({
   searchParams,
 }: DashboardPagesPageProps) {
-  const { site, range, platform, botType } = await searchParams;
+  const { site, range, platform, botType, traffic } = await searchParams;
   const data = await getDashboardData({
     siteId: site,
     dateRange: resolveDashboardDateRange(range),
+    trafficScope: resolveDashboardTrafficScope(traffic),
     platform: normalizeDashboardFilterValue(platform),
     botType: normalizeDashboardFilterValue(botType),
   });
@@ -30,6 +37,7 @@ export default async function DashboardPagesPage({
       <AnalyticsScope sites={data.sites} selectedSiteId={data.selectedSiteId} />
       <DashboardAnalyticsFilters
         selectedDateRange={data.filters.dateRange}
+        trafficScope={data.filters.trafficScope}
         selectedPlatform={data.filters.selectedPlatform}
         selectedBotType={data.filters.selectedBotType}
         platforms={data.filters.availablePlatforms}

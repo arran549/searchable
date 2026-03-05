@@ -1,4 +1,4 @@
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 import { gif, json, text } from "../_shared/http.ts";
 import { getScriptSource } from "../_shared/tracker-assets.ts";
 import { insertEvent, type TrackPayload } from "../_shared/tracking.ts";
@@ -9,16 +9,25 @@ function getRoute(url: URL) {
   return parts.at(-1) ?? "track";
 }
 
-function getStatus() {
-  return json({
-    ok: true,
-    service: "track",
-    timestamp: new Date().toISOString(),
-    env: {
-      hasSupabaseUrl: Boolean(Deno.env.get("SUPABASE_URL")),
-      hasServiceRoleKey: Boolean(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")),
-    },
-  });
+function getPublicTrackEndpoint(request: Request, url: URL) {
+  const forwardedHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const originHost = url.host;
+
+  if (forwardedHost || originHost) {
+    const protocol = (forwardedProto?.split(",")[0]?.trim() || url.protocol.replace(":", "") || "http").toLowerCase();
+    let host = forwardedHost || originHost;
+
+    // Some proxies forward host without port (e.g. 127.0.0.1). Re-attach non-default port from request URL.
+    if (host && !host.includes(":") && url.port && url.port !== "80" && url.port !== "443") {
+      host = `${host}:${url.port}`;
+    }
+
+    return `${protocol}://${host}/functions/v1/track`;
+  }
+
+  const origin = url.origin.replace(/\/$/, "");
+  return `${origin}/functions/v1/track`;
 }
 
 async function handlePixel(request: Request, url: URL) {
@@ -36,25 +45,39 @@ async function handlePixel(request: Request, url: URL) {
     });
   }
 
-  return gif();
+  return gif(request);
 }
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(request) });
   }
 
   const url = new URL(request.url);
   const route = getRoute(url);
 
   if (request.method === "GET" && route === "status") {
-    return getStatus();
+    return json(
+      {
+        ok: true,
+        service: "track",
+        timestamp: new Date().toISOString(),
+        env: {
+          hasSupabaseUrl: Boolean(Deno.env.get("SUPABASE_URL")),
+          hasServiceRoleKey: Boolean(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")),
+        },
+      },
+      200,
+      request,
+    );
   }
 
   if (request.method === "GET" && route === "track.js") {
-    const baseUrl = new URL(request.url);
-    baseUrl.pathname = baseUrl.pathname.replace(/\/track\.js$/, "");
-    return text(getScriptSource(baseUrl.toString()), "application/javascript; charset=utf-8");
+    return text(
+      getScriptSource(getPublicTrackEndpoint(request, url)),
+      "application/javascript; charset=utf-8",
+      request,
+    );
   }
 
   if (request.method === "GET" && route === "track.gif") {
@@ -62,13 +85,13 @@ Deno.serve(async (request) => {
   }
 
   if (request.method !== "POST") {
-    return json({ error: "Method not allowed" }, 405);
+    return json({ error: "Method not allowed" }, 405, request);
   }
 
   const payload = (await request.json().catch(() => null)) as TrackPayload | null;
 
   if (!payload) {
-    return json({ error: "Invalid JSON body" }, 400);
+    return json({ error: "Invalid JSON body" }, 400, request);
   }
 
   try {
@@ -78,6 +101,6 @@ Deno.serve(async (request) => {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error";
-    return json({ error: message }, 500);
+    return json({ error: message }, 500, request);
   }
 });

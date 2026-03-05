@@ -25,6 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${manrope.variable} ${mono.variable}`}>
+      <head>
+        <script async src="http://127.0.0.1:54321/functions/v1/track/track.js?token=beae8bcfbdd8d9dd612445fec9c636da0ed9&spa=1&v=7"></script>
+      </head>
       <body className="font-[family-name:var(--font-sans)] antialiased">{children}</body>
     </html>
   );

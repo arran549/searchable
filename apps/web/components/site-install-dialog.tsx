@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { CopyButton } from "@/components/copy-button";
 import type { DashboardSite } from "@/lib/dashboard";
@@ -14,8 +14,9 @@ type SiteInstallDialogProps = {
 export function SiteInstallDialog({ site, supabaseUrl }: SiteInstallDialogProps) {
   const [open, setOpen] = useState(false);
   const [method, setMethod] = useState<"script" | "pixel">("script");
+  const [spaEnabled, setSpaEnabled] = useState(true);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const scriptSnippet = getScriptInstallSnippet(supabaseUrl, site.tracking_token);
+  const scriptSnippet = getScriptInstallSnippet(supabaseUrl, site.tracking_token, { spa: spaEnabled });
   const pixelSnippet = getPixelInstallSnippet(supabaseUrl, site.tracking_token);
 
   useEffect(() => {
@@ -51,13 +52,13 @@ export function SiteInstallDialog({ site, supabaseUrl }: SiteInstallDialogProps)
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="rounded-xl border border-[var(--border)] bg-[#fbf7f0] px-3 py-2 text-sm font-medium text-[var(--foreground)] transition hover:bg-white"
-      >
-        Install
-      </button>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex min-w-[190px] cursor-pointer items-center justify-center rounded-xl border border-transparent bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-[#0a1014] shadow-[0_10px_24px_rgba(16,24,40,0.16)] transition hover:bg-[var(--accent-strong)]"
+        >
+          Install Tracking Code
+        </button>
 
       <dialog
         ref={dialogRef}
@@ -145,10 +146,27 @@ export function SiteInstallDialog({ site, supabaseUrl }: SiteInstallDialogProps)
                 }
                 code={method === "script" ? scriptSnippet : pixelSnippet}
                 copyLabel={method === "script" ? "Copy script" : "Copy pixel"}
+                scriptControls={
+                  method === "script" ? (
+                    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+                      <span>SPA Tracking</span>
+                      <button
+                        type="button"
+                        onClick={() => setSpaEnabled((value) => !value)}
+                        className={[
+                          "cursor-pointer rounded-full px-2 py-1 text-[11px] transition",
+                          spaEnabled
+                            ? "bg-[#132230] text-white"
+                            : "bg-white text-[var(--foreground)] border border-[var(--border)]",
+                        ].join(" ")}
+                      >
+                        {spaEnabled ? "On" : "Off"}
+                      </button>
+                    </div>
+                  ) : null
+                }
               />
-            </div>
 
-            <div className="min-w-0 space-y-4">
               <article className="rounded-[1.5rem] border border-[var(--border)] bg-white/60 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
                   Tracking token
@@ -160,7 +178,9 @@ export function SiteInstallDialog({ site, supabaseUrl }: SiteInstallDialogProps)
                   <CopyButton value={site.tracking_token} label="Copy token" />
                 </div>
               </article>
+            </div>
 
+            <div className="min-w-0 space-y-4">
               <article className="rounded-[1.5rem] border border-[var(--border)] bg-white/60 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
                   Install notes
@@ -196,11 +216,13 @@ function InstallSnippetBlock({
   description,
   code,
   copyLabel,
+  scriptControls,
 }: {
   title: string;
   description: string;
   code: string;
   copyLabel: string;
+  scriptControls?: ReactNode;
 }) {
   return (
     <article className="rounded-[1.5rem] border border-[var(--border)] bg-white/60 p-4">
@@ -210,8 +232,14 @@ function InstallSnippetBlock({
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted-foreground)]">
             {description}
           </p>
+          {scriptControls ? (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              {scriptControls}
+              <CopyButton value={code} label={copyLabel} />
+            </div>
+          ) : null}
         </div>
-        <CopyButton value={code} label={copyLabel} />
+        {!scriptControls ? <CopyButton value={code} label={copyLabel} /> : null}
       </div>
 
       <pre className="mt-4 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[#fffdf8] p-3 text-xs leading-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
