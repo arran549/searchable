@@ -9,7 +9,7 @@ import {
 } from "@/components/dashboard-sections";
 import { SiteRegistrationDialog } from "@/components/site-registration-dialog";
 import { env } from "@/lib/env";
-import { formatRelativeDays, getDashboardData } from "@/lib/dashboard";
+import { getDashboardData } from "@/lib/dashboard";
 
 type DashboardSitesPageProps = {
   searchParams: Promise<{
@@ -24,7 +24,6 @@ export default async function DashboardSitesPage({
 }: DashboardSitesPageProps) {
   const { onboarding, error, message } = await searchParams;
   const data = await getDashboardData();
-  const featuredSite = data.sites[0] ?? null;
   const showOnboarding = onboarding === "1";
 
   return (
@@ -69,7 +68,7 @@ export default async function DashboardSitesPage({
         </section>
       ) : (
         <>
-          <section className="grid gap-4 xl:grid-cols-[1.12fr_0.88fr]">
+          <section>
             <article className="panel rounded-[1.5rem] p-5">
               <SectionHeading
                 eyebrow="Inventory"
@@ -85,65 +84,18 @@ export default async function DashboardSitesPage({
                 noticeError={error}
               />
             </article>
+          </section>
 
-            <div className="grid gap-4">
-              <article className="panel rounded-[1.5rem] p-5">
-                <SectionHeading
-                  eyebrow="Onboarding"
-                  title="Register a new site"
-                  description="Open a focused dialog to register domains without leaving the current operational view."
-                  meta="Recommended first step"
-                />
-                <SiteRegistrationDialog />
-              </article>
-
-              <article className="panel rounded-[1.5rem] p-5">
-                <SectionHeading
-                  eyebrow="Focus"
-                  title={featuredSite ? featuredSite.name || featuredSite.domain : "Your next site"}
-                  description={
-                    featuredSite
-                      ? "The most recently added domain is a good candidate for installation and first-event verification."
-                      : "Create a site to generate deployable code and start validating the tracking pipeline."
-                  }
-                  meta={featuredSite ? `Added ${formatRelativeDays(featuredSite.created_at)}` : "No sites yet"}
-                />
-
-                {featuredSite ? (
-                  <div className="grid gap-3">
-                    {[
-                      {
-                        label: "Domain",
-                        value: featuredSite.domain,
-                      },
-                      {
-                        label: "Verification",
-                        value: featuredSite.verified_at ? "Complete" : "Pending",
-                      },
-                      {
-                        label: "Install status",
-                        value: "Script and pixel ready",
-                      },
-                    ].map((item) => (
-                      <div
-                        key={item.label}
-                        className="rounded-[1.5rem] border border-[var(--border)] bg-white/55 p-4"
-                      >
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-                          {item.label}
-                        </p>
-                        <p className="mt-2 text-base font-semibold">{item.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-[1.5rem] border border-[var(--border)] bg-white/55 p-5 text-sm leading-7 text-[var(--muted-foreground)]">
-                    The first created site will appear here with a tighter operational summary and quick
-                    install context.
-                  </div>
-                )}
-              </article>
-            </div>
+          <section>
+            <article className="panel rounded-[1.5rem] p-5">
+              <SectionHeading
+                eyebrow="Onboarding"
+                title="Register a new site"
+                description="Open a focused dialog to register domains without leaving the current operational view."
+                meta="Recommended first step"
+              />
+              <SiteRegistrationDialog />
+            </article>
           </section>
 
           <section>

@@ -3,6 +3,7 @@ import {
   ActivityTrend,
   AnalyticsScope,
   DashboardNotice,
+  PageVolumePanel,
   PageLeaderboard,
   SectionHeading,
   SiteList,
@@ -62,7 +63,10 @@ export default async function DashboardPagesPage({
             description="PRD FR-3.3 ranking of pages by crawler visit count, with the same filters applied across all dashboard views."
             meta={`${data.topPages.length} ranked pages / ${totalVisits} visits`}
           />
-          <PageLeaderboard pages={data.topPages} />
+          <PageVolumePanel pages={data.topPages} limit={8} />
+          <div className="mt-5">
+            <PageLeaderboard pages={data.topPages} />
+          </div>
         </article>
 
         <article className="panel rounded-[1.5rem] p-5">

@@ -1,4 +1,5 @@
 import { CopyButton } from "@/components/copy-button";
+import { PageVolumeChart, PlatformShareChart, TimelineLineChart } from "@/components/dashboard-charts";
 import { SiteInstallDialog } from "@/components/site-install-dialog";
 import { SiteRegistrationDialog } from "@/components/site-registration-dialog";
 import { SiteVerificationDialog } from "@/components/site-verification-dialog";
@@ -168,60 +169,10 @@ export function SiteRegistrationCard() {
 
 export function PlatformPanel({
   platforms,
-  limit,
 }: {
   platforms: DashboardPlatform[];
-  limit?: number;
 }) {
-  const visiblePlatforms = typeof limit === "number" ? platforms.slice(0, limit) : platforms;
-  const topPlatformVisits = visiblePlatforms[0]?.visits ?? 1;
-
-  if (!visiblePlatforms.length) {
-    return (
-      <EmptyPanel message="No crawler traffic has been recorded yet. Register a site, install a snippet, and send a test event through Bruno or the tracker endpoint." />
-    );
-  }
-
-  return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_0.82fr]">
-      <div className="space-y-4">
-        {visiblePlatforms.map((platform) => (
-          <div key={platform.name} className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">{platform.name}</span>
-              <span className="text-[var(--muted-foreground)]">{platform.visits} visits</span>
-            </div>
-            <div className="h-3 rounded-full bg-black/5">
-              <div
-                className={`h-3 rounded-full ${platform.tint}`}
-                style={{ width: `${(platform.visits / topPlatformVisits) * 100}%` }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="rounded-[1.5rem] border border-[var(--border)] bg-white/55 p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-          Readout
-        </p>
-        <div className="mt-4 space-y-3">
-          {visiblePlatforms.map((platform) => (
-            <div
-              key={platform.name}
-              className="flex items-center justify-between rounded-xl border border-[var(--border)] px-4 py-3"
-            >
-              <div className="flex items-center gap-3">
-                <span className={`inline-flex h-3 w-3 rounded-full ${platform.tint}`} />
-                <span className="text-sm font-medium">{platform.name}</span>
-              </div>
-              <span className="text-sm text-[var(--muted-foreground)]">{platform.visits}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+  return <PlatformShareChart platforms={platforms} />;
 }
 
 export function PageLeaderboard({
@@ -388,38 +339,17 @@ export function ActivityTrend({
   points: DashboardTimelinePoint[];
   caption: string;
 }) {
-  if (!points.length) {
-    return (
-      <EmptyPanel message="No trend data yet for the selected filters. Expand the range or remove filters to see event movement over time." />
-    );
-  }
+  return <TimelineLineChart points={points} caption={caption} />;
+}
 
-  const peak = points.reduce((max, point) => Math.max(max, point.visits), 1);
-
-  return (
-    <div className="space-y-4">
-      <p className="text-sm leading-6 text-[var(--muted-foreground)]">{caption}</p>
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-6">
-        {points.map((point) => (
-          <div
-            key={point.label}
-            className="rounded-xl border border-[var(--border)] bg-white/60 px-3 py-3 text-center"
-          >
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
-              {point.label}
-            </p>
-            <div className="mt-2 h-2 rounded-full bg-black/6">
-              <div
-                className="h-2 rounded-full bg-[#c7652b]"
-                style={{ width: `${Math.max((point.visits / peak) * 100, point.visits ? 10 : 0)}%` }}
-              />
-            </div>
-            <p className="mt-2 text-sm font-semibold">{point.visits}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+export function PageVolumePanel({
+  pages,
+  limit,
+}: {
+  pages: DashboardPageSummary[];
+  limit?: number;
+}) {
+  return <PageVolumeChart pages={pages} limit={limit} />;
 }
 
 export function InstallSnippetGrid({
@@ -562,6 +492,9 @@ export function SiteList({
                 </span>
               </div>
               <p className="mt-1 text-sm text-[var(--muted-foreground)]">{site.domain}</p>
+              <div className="mt-3 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                <SiteInstallDialog site={site} supabaseUrl={supabaseUrl} />
+              </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[360px]">
@@ -582,11 +515,6 @@ export function SiteList({
                 </p>
                 <div className="mt-3">
                   <SiteVerificationDialog site={site} returnTo={returnTo ?? "/dashboard/sites"} />
-                </div>
-              </div>
-              <div className="sm:col-span-2 flex items-center justify-start sm:justify-end">
-                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-                  <SiteInstallDialog site={site} supabaseUrl={supabaseUrl} />
                 </div>
               </div>
             </div>
