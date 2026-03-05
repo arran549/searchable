@@ -366,7 +366,7 @@ export function InstallSnippetGrid({
   }
 
   return (
-    <div className="grid gap-4 xl:grid-cols-2">
+    <div className="grid gap-4 2xl:grid-cols-2">
       {sites.map((site) => (
         <article key={site.id} className="panel rounded-[1.5rem] p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -423,23 +423,6 @@ export function InstallSnippetGrid({
               </div>
             </div>
 
-            <div className="grid gap-3">
-              {[
-                "Paste the script into the global site template if you want full-page coverage.",
-                "Use the pixel when the target environment only supports raw HTML embeds.",
-                "After deployment, send a known crawler event and confirm it appears in Activity.",
-              ].map((item, index) => (
-                <div
-                  key={item}
-                  className="flex items-start gap-3 rounded-2xl border border-[var(--border)] bg-white/55 px-4 py-3 text-sm leading-6 text-[var(--muted-foreground)]"
-                >
-                  <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#132230] text-xs font-semibold text-white">
-                    {index + 1}
-                  </span>
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </article>
       ))}

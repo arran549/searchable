@@ -101,12 +101,42 @@ export default async function DashboardSitesPage({
           <section>
             <article className="panel rounded-[1.5rem] p-5">
               <SectionHeading
-                eyebrow="Workflow"
-                title="Install is now in the site list"
-                description="Use the Install Tracking Code button on any site row to open a focused deployment dialog with copyable script, pixel fallback, and token."
-                meta="Faster operator workflow"
+                eyebrow="Install Guide"
+                title="How to install tracking on a site"
+                description="Use these steps to deploy tracking correctly. The Install Tracking Code button is in each site row."
+                meta="Required to see crawler analytics"
               />
-              <div className="flex flex-wrap gap-3">
+              <div className="grid gap-3 md:grid-cols-3">
+                {[
+                  {
+                    step: "Step 1",
+                    title: "Open Install Tracking Code",
+                    body: "In the site list, click Install Tracking Code for the domain you want to track.",
+                  },
+                  {
+                    step: "Step 2",
+                    title: "Add script or pixel",
+                    body: "Copy the recommended script (or fallback pixel) and add it to your website template.",
+                  },
+                  {
+                    step: "Step 3",
+                    title: "Confirm events arrive",
+                    body: "Go to Activity and verify crawler events are appearing for that site.",
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.title}
+                    className="rounded-[1.5rem] border border-[var(--border)] bg-white/60 p-4"
+                  >
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+                      {item.step}
+                    </p>
+                    <p className="mt-2 text-base font-semibold text-[var(--foreground)]">{item.title}</p>
+                    <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">{item.body}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-3">
                 <Link
                   href="/dashboard/activity"
                   className="rounded-full border border-[var(--border)] bg-white/70 px-4 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:bg-white"

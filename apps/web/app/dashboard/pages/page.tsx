@@ -6,9 +6,7 @@ import {
   PageVolumePanel,
   PageLeaderboard,
   SectionHeading,
-  SiteList,
 } from "@/components/dashboard-sections";
-import { env } from "@/lib/env";
 import {
   getDashboardData,
   normalizeDashboardFilterValue,
@@ -112,7 +110,7 @@ export default async function DashboardPagesPage({
         </article>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+      <section>
         <article className="panel rounded-[1.5rem] p-5">
           <SectionHeading
             eyebrow="Trend"
@@ -122,22 +120,6 @@ export default async function DashboardPagesPage({
           <ActivityTrend
             points={data.timeline}
             caption={`Showing ${data.filters.dateRange.toUpperCase()} volume trend for page activity.`}
-          />
-        </article>
-
-        <article className="panel rounded-[1.5rem] p-5">
-          <SectionHeading
-            eyebrow="Sites"
-            title="Tracked domains in scope"
-            description="All registered domains and their tracking readiness."
-            meta={`${data.sites.length} registered domains`}
-          />
-          <SiteList
-            sites={data.sites}
-            supabaseUrl={env.NEXT_PUBLIC_SUPABASE_URL}
-            returnTo="/dashboard/pages"
-            noticeMessage={message}
-            noticeError={error}
           />
         </article>
       </section>
