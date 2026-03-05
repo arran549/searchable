@@ -262,19 +262,19 @@ function classifyBot(userAgent) {
 - [X] Set up database schema (sites, crawler_events)
 - [X] Configure RLS policies
 - [X] Build Edge Function for tracking endpoint
-- [ ] Implement bot classification logic
-- [ ] Create tracking pixel JavaScript
+- [X] Implement bot classification logic
+- [X] Create tracking pixel JavaScript
 - [ ] Test end-to-end data flow
 
 **Day 2:**
-- [ ] Set up Next.js app with Supabase client
-- [ ] Build auth flow (sign up/login)
-- [ ] Create dashboard layout
-- [ ] Build overview stats component
-- [ ] Build platform breakdown chart
-- [ ] Build top pages table
-- [ ] Build activity log with filters
-- [ ] Implement CSV export
+- [X] Set up Next.js app with Supabase client
+- [X] Build auth flow (sign up/login)
+- [X] Create dashboard layout
+- [X] Build overview stats component
+- [X] Build platform breakdown chart
+- [X] Build top pages table
+- [X] Build activity log with filters
+- [X] Implement CSV export
 - [ ] Testing and bug fixes
 
 ---
