@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { startTransition } from "react";
 
@@ -30,7 +31,8 @@ export function SiteScopeFilter({ options, selectedSiteId }: SiteScopeFilterProp
 
     const query = params.toString();
     startTransition(() => {
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      const href = (query ? `${pathname}?${query}` : pathname) as Route;
+      router.replace(href, { scroll: false });
     });
   }
 

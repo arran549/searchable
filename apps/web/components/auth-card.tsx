@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 
 import { AuthSubmitButton } from "@/components/auth-submit-button";
 
@@ -8,7 +9,7 @@ type AuthCardProps = {
   submitLabel: string;
   pendingLabel: string;
   alternateLabel: string;
-  alternateHref: string;
+  alternateHref: Route;
   alternateText: string;
   action: (formData: FormData) => Promise<void>;
 };
