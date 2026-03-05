@@ -1,7 +1,6 @@
-import { createSiteAction } from "@/app/dashboard/actions";
-import { AuthSubmitButton } from "@/components/auth-submit-button";
 import { CopyButton } from "@/components/copy-button";
 import { SiteInstallDialog } from "@/components/site-install-dialog";
+import { SiteRegistrationDialog } from "@/components/site-registration-dialog";
 import { SiteScopeFilter } from "@/components/site-scope-filter";
 import type {
   DashboardEvent,
@@ -141,28 +140,7 @@ export function SiteRegistrationCard() {
         </span>
       </div>
 
-      <form action={createSiteAction} className="space-y-4">
-        <label className="block space-y-2">
-          <span className="text-sm font-medium">Domain</span>
-          <input
-            required
-            name="domain"
-            placeholder="example.com"
-            className="w-full rounded-2xl border border-[var(--border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--accent)]"
-          />
-        </label>
-
-        <label className="block space-y-2">
-          <span className="text-sm font-medium">Label</span>
-          <input
-            name="name"
-            placeholder="Marketing site, docs, blog..."
-            className="w-full rounded-2xl border border-[var(--border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--accent)]"
-          />
-        </label>
-
-        <AuthSubmitButton idleLabel="Create site" pendingLabel="Creating..." />
-      </form>
+      <SiteRegistrationDialog />
 
       <div className="mt-5 grid gap-3">
         {[

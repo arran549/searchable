@@ -10,19 +10,48 @@ function getString(formData: FormData, key: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function normalizeOrigin(origin: string) {
+  return origin.replace(/\/$/, "");
+}
+
+function getConfiguredOrigin() {
+  const explicit =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    process.env.SITE_URL ??
+    process.env.NEXT_PUBLIC_APP_URL;
+
+  if (explicit) {
+    return normalizeOrigin(explicit);
+  }
+
+  const vercelUrl = process.env.VERCEL_URL;
+
+  if (vercelUrl) {
+    return `https://${vercelUrl}`;
+  }
+
+  return null;
+}
+
 async function getRequestOrigin() {
   const headerStore = await headers();
   const origin = headerStore.get("origin");
 
   if (origin) {
-    return origin;
+    return normalizeOrigin(origin);
   }
 
   const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
   const proto = headerStore.get("x-forwarded-proto") ?? "http";
 
   if (host) {
-    return `${proto}://${host}`;
+    return `${proto}://${host}`.replace(/\/$/, "");
+  }
+
+  const configuredOrigin = getConfiguredOrigin();
+
+  if (configuredOrigin) {
+    return configuredOrigin;
   }
 
   return "http://127.0.0.1:3000";

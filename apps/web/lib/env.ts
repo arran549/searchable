@@ -27,6 +27,10 @@ function getSupabasePublicKey() {
 }
 
 export const env = {
-  NEXT_PUBLIC_SUPABASE_URL: getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
-  NEXT_PUBLIC_SUPABASE_PUBLIC_KEY: getSupabasePublicKey(),
+  get NEXT_PUBLIC_SUPABASE_URL() {
+    return getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL");
+  },
+  get NEXT_PUBLIC_SUPABASE_PUBLIC_KEY() {
+    return getSupabasePublicKey();
+  },
 };

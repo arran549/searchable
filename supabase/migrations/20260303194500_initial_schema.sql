@@ -1,18 +1,18 @@
 create extension if not exists pgcrypto;
 
 create table if not exists public.sites (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key default extensions.gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   name text,
   domain text not null unique,
-  verification_token text not null unique default encode(gen_random_bytes(18), 'hex'),
-  tracking_token text not null unique default encode(gen_random_bytes(18), 'hex'),
+  verification_token text not null unique default encode(extensions.gen_random_bytes(18), 'hex'),
+  tracking_token text not null unique default encode(extensions.gen_random_bytes(18), 'hex'),
   verified_at timestamptz,
   created_at timestamptz not null default timezone('utc', now())
 );
 
 create table if not exists public.crawler_events (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key default extensions.gen_random_uuid(),
   site_id uuid not null references public.sites (id) on delete cascade,
   occurred_at timestamptz not null default timezone('utc', now()),
   user_agent text not null,

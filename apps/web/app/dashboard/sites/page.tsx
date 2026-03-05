@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SectionHeading, SiteList, SiteRegistrationCard, SiteSnapshotCards } from "@/components/dashboard-sections";
+import { SiteRegistrationDialog } from "@/components/site-registration-dialog";
 import { env } from "@/lib/env";
 import { formatRelativeDays, getDashboardData } from "@/lib/dashboard";
 
@@ -75,15 +76,10 @@ export default async function DashboardSitesPage({
                 <SectionHeading
                   eyebrow="Onboarding"
                   title="Register a new site"
-                  description="Use a focused full-page registration flow for cleaner onboarding and less cognitive load."
+                  description="Open a focused dialog to register domains without leaving the current operational view."
                   meta="Recommended first step"
                 />
-                <Link
-                  href="/dashboard/sites?onboarding=1"
-                  className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[#0a1014] transition hover:bg-[var(--accent-strong)]"
-                >
-                  Open onboarding
-                </Link>
+                <SiteRegistrationDialog />
               </article>
 
               <article className="panel rounded-[1.5rem] p-5">
