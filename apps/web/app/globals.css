@@ -79,8 +79,10 @@ a {
 .dashboard-main-header {
   position: sticky;
   top: 0;
-  z-index: 25;
+  z-index: 40;
+  isolation: isolate;
   backdrop-filter: blur(8px);
+  box-shadow: 0 1px 0 rgb(220 226 223 / 0.9);
 }
 
 .dashboard-sidebar {
@@ -115,8 +117,6 @@ a {
 
 @media (min-width: 768px) {
   .dashboard-layout {
-    height: 100vh;
-    overflow: hidden;
     padding-left: calc(var(--dashboard-sidebar-width) + var(--dashboard-shell-gap));
   }
 
@@ -151,8 +151,6 @@ a {
     min-width: 0;
     width: min(1280px, calc(100vw - var(--dashboard-sidebar-width) - var(--dashboard-shell-gap) - 2rem));
     margin: 0 auto;
-    height: 100vh;
-    overflow-y: auto;
     padding-inline: 1rem;
   }
 }

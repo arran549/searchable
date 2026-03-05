@@ -19,7 +19,7 @@ export function DashboardShell({ userEmail, children }: DashboardShellProps) {
       <section className="dashboard-main py-6 md:py-8">
         <div className="panel rounded-[2rem]">
           <div className="min-w-0">
-            <div className="dashboard-main-header rounded-t-[2rem] border-b border-[var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,247,246,0.92))] px-6 py-4 md:px-8">
+            <div className="dashboard-main-header rounded-t-[2rem] border-b border-[var(--border)] bg-[linear-gradient(180deg,#ffffff,#f4f7f6)] px-6 py-4 md:px-8">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
                 <div className="max-w-3xl">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--muted-foreground)]">
