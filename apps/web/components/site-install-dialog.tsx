@@ -14,7 +14,7 @@ type SiteInstallDialogProps = {
 export function SiteInstallDialog({ site, supabaseUrl }: SiteInstallDialogProps) {
   const [open, setOpen] = useState(false);
   const [method, setMethod] = useState<"script" | "pixel">("script");
-  const [spaEnabled, setSpaEnabled] = useState(true);
+  const [spaEnabled, setSpaEnabled] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const scriptSnippet = getScriptInstallSnippet(supabaseUrl, site.tracking_token, { spa: spaEnabled });
   const pixelSnippet = getPixelInstallSnippet(supabaseUrl, site.tracking_token);

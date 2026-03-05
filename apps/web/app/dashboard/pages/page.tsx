@@ -1,5 +1,12 @@
 import { DashboardAnalyticsFilters } from "@/components/dashboard-analytics-filters";
-import { ActivityTrend, AnalyticsScope, PageLeaderboard, SectionHeading, SiteList } from "@/components/dashboard-sections";
+import {
+  ActivityTrend,
+  AnalyticsScope,
+  DashboardNotice,
+  PageLeaderboard,
+  SectionHeading,
+  SiteList,
+} from "@/components/dashboard-sections";
 import { env } from "@/lib/env";
 import {
   getDashboardData,
@@ -11,6 +18,8 @@ import {
 type DashboardPagesPageProps = {
   searchParams: Promise<{
     botType?: string;
+    error?: string;
+    message?: string;
     traffic?: string;
     platform?: string;
     range?: string;
@@ -21,7 +30,7 @@ type DashboardPagesPageProps = {
 export default async function DashboardPagesPage({
   searchParams,
 }: DashboardPagesPageProps) {
-  const { site, range, platform, botType, traffic } = await searchParams;
+  const { site, range, platform, botType, traffic, error, message } = await searchParams;
   const data = await getDashboardData({
     siteId: site,
     dateRange: resolveDashboardDateRange(range),
@@ -34,6 +43,7 @@ export default async function DashboardPagesPage({
 
   return (
     <div className="space-y-6">
+      <DashboardNotice message={message} error={error} />
       <AnalyticsScope sites={data.sites} selectedSiteId={data.selectedSiteId} />
       <DashboardAnalyticsFilters
         selectedDateRange={data.filters.dateRange}
@@ -118,7 +128,13 @@ export default async function DashboardPagesPage({
             description="All registered domains and their tracking readiness."
             meta={`${data.sites.length} registered domains`}
           />
-          <SiteList sites={data.sites} supabaseUrl={env.NEXT_PUBLIC_SUPABASE_URL} />
+          <SiteList
+            sites={data.sites}
+            supabaseUrl={env.NEXT_PUBLIC_SUPABASE_URL}
+            returnTo="/dashboard/pages"
+            noticeMessage={message}
+            noticeError={error}
+          />
         </article>
       </section>
     </div>

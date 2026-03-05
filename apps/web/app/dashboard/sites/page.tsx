@@ -1,12 +1,20 @@
 import Link from "next/link";
 
-import { SectionHeading, SiteList, SiteRegistrationCard, SiteSnapshotCards } from "@/components/dashboard-sections";
+import {
+  DashboardNotice,
+  SectionHeading,
+  SiteList,
+  SiteRegistrationCard,
+  SiteSnapshotCards,
+} from "@/components/dashboard-sections";
 import { SiteRegistrationDialog } from "@/components/site-registration-dialog";
 import { env } from "@/lib/env";
 import { formatRelativeDays, getDashboardData } from "@/lib/dashboard";
 
 type DashboardSitesPageProps = {
   searchParams: Promise<{
+    error?: string;
+    message?: string;
     onboarding?: string;
   }>;
 };
@@ -14,13 +22,14 @@ type DashboardSitesPageProps = {
 export default async function DashboardSitesPage({
   searchParams,
 }: DashboardSitesPageProps) {
-  const { onboarding } = await searchParams;
+  const { onboarding, error, message } = await searchParams;
   const data = await getDashboardData();
   const featuredSite = data.sites[0] ?? null;
   const showOnboarding = onboarding === "1";
 
   return (
     <div className="space-y-6">
+      <DashboardNotice message={message} error={error} />
       <section>
         <SectionHeading
           eyebrow="Sites"
@@ -68,7 +77,13 @@ export default async function DashboardSitesPage({
                 description="A clear operational list of every domain in the workspace, with onboarding status and token access for deployment."
                 meta="Source of truth for domains"
               />
-              <SiteList sites={data.sites} supabaseUrl={env.NEXT_PUBLIC_SUPABASE_URL} />
+              <SiteList
+                sites={data.sites}
+                supabaseUrl={env.NEXT_PUBLIC_SUPABASE_URL}
+                returnTo="/dashboard/sites"
+                noticeMessage={message}
+                noticeError={error}
+              />
             </article>
 
             <div className="grid gap-4">

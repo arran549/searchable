@@ -1,0 +1,20 @@
+meta {
+  name: Searchable
+  type: http
+  seq: 2
+}
+
+get {
+  url: https://dns.google/resolve?name=_searchable-verify.workmesh.ai&type=TX
+  body: none
+  auth: inherit
+}
+
+params:query {
+  name: _searchable-verify.workmesh.ai
+  type: TX
+}
+
+settings {
+  encodeUrl: true
+}

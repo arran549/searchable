@@ -1,6 +1,7 @@
 import { CopyButton } from "@/components/copy-button";
 import { SiteInstallDialog } from "@/components/site-install-dialog";
 import { SiteRegistrationDialog } from "@/components/site-registration-dialog";
+import { SiteVerificationDialog } from "@/components/site-verification-dialog";
 import { SiteScopeFilter } from "@/components/site-scope-filter";
 import type {
   DashboardEvent,
@@ -469,7 +470,7 @@ export function InstallSnippetGrid({
 
             <SnippetBlock
               label="Recommended script"
-              code={getScriptInstallSnippet(supabaseUrl, site.tracking_token, { spa: true })}
+              code={getScriptInstallSnippet(supabaseUrl, site.tracking_token)}
               copyLabel="Copy script"
             />
             <SnippetBlock
@@ -519,9 +520,15 @@ export function InstallSnippetGrid({
 export function SiteList({
   sites,
   supabaseUrl,
+  returnTo,
+  noticeMessage,
+  noticeError,
 }: {
   sites: DashboardSite[];
   supabaseUrl: string;
+  returnTo?: string;
+  noticeMessage?: string;
+  noticeError?: string;
 }) {
   if (!sites.length) {
     return (
@@ -531,6 +538,16 @@ export function SiteList({
 
   return (
     <div className="grid gap-3">
+      {noticeMessage ? (
+        <div className="rounded-2xl border border-[var(--border)] bg-[#ebfbf4] px-4 py-3 text-sm text-[#14523a]">
+          {noticeMessage}
+        </div>
+      ) : null}
+      {noticeError ? (
+        <div className="rounded-2xl border border-[#cf6f2e] bg-[#fff4ea] px-4 py-3 text-sm text-[#9d4511]">
+          {noticeError}
+        </div>
+      ) : null}
       {sites.map((site) => (
         <article
           key={site.id}
@@ -563,6 +580,9 @@ export function SiteList({
                 <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
                   {site.verified_at ? "Complete" : "Pending"}
                 </p>
+                <div className="mt-3">
+                  <SiteVerificationDialog site={site} returnTo={returnTo ?? "/dashboard/sites"} />
+                </div>
               </div>
               <div className="sm:col-span-2 flex items-center justify-start sm:justify-end">
                 <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
