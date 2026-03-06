@@ -34,6 +34,12 @@ function getConfiguredOrigin() {
 }
 
 async function getRequestOrigin() {
+  const configuredOrigin = getConfiguredOrigin();
+
+  if (configuredOrigin) {
+    return configuredOrigin;
+  }
+
   const headerStore = await headers();
   const origin = headerStore.get("origin");
 
@@ -46,12 +52,6 @@ async function getRequestOrigin() {
 
   if (host) {
     return `${proto}://${host}`.replace(/\/$/, "");
-  }
-
-  const configuredOrigin = getConfiguredOrigin();
-
-  if (configuredOrigin) {
-    return configuredOrigin;
   }
 
   return "http://127.0.0.1:3000";
