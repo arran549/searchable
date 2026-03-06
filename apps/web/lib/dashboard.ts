@@ -43,6 +43,7 @@ export type DashboardPlatform = {
 
 export type DashboardPageSummary = {
   path: string;
+  site: string;
   visits: number;
   bot: string;
   platform: string;
@@ -229,8 +230,10 @@ export async function getDashboardData(options: DashboardDataOptions = {}) {
   const topPages = Array.from(
     safeEvents.reduce((accumulator, event) => {
       const key = event.page_path || event.page_url;
+      const siteId = event.site_id;
       const current = accumulator.get(key) ?? {
         path: key,
+        siteCounts: new Map<string, number>(),
         visits: 0,
         bot: event.bot_name || "Unknown",
         platform: event.platform || "Unknown",
@@ -239,11 +242,32 @@ export async function getDashboardData(options: DashboardDataOptions = {}) {
       current.visits += 1;
       current.bot = event.bot_name || current.bot;
       current.platform = event.platform || current.platform;
+      current.siteCounts.set(siteId, (current.siteCounts.get(siteId) ?? 0) + 1);
       accumulator.set(key, current);
       return accumulator;
-    }, new Map<string, DashboardPageSummary>()),
+    }, new Map<string, {
+      path: string;
+      siteCounts: Map<string, number>;
+      visits: number;
+      bot: string;
+      platform: string;
+    }>()),
   )
-    .map(([, value]) => value)
+    .map(([, value]) => {
+      const rankedSites = Array.from(value.siteCounts.entries()).sort((left, right) => right[1] - left[1]);
+      const topSiteId = rankedSites[0]?.[0];
+      const topSite = safeSites.find((site) => site.id === topSiteId);
+      const topSiteLabel = topSite?.name || topSite?.domain || "Unknown site";
+      const site = rankedSites.length > 1 ? `${topSiteLabel} (+${rankedSites.length - 1} more)` : topSiteLabel;
+
+      return {
+        path: value.path,
+        site,
+        visits: value.visits,
+        bot: value.bot,
+        platform: value.platform,
+      };
+    })
     .sort((left, right) => right.visits - left.visits);
 
   const availablePlatforms = Array.from(

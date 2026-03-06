@@ -204,6 +204,7 @@ export function PageLeaderboard({
             <p className="truncate font-[family-name:var(--font-mono)] text-sm font-medium">
               {page.path}
             </p>
+            <p className="mt-1 text-xs text-[var(--muted-foreground)]">Site: {page.site}</p>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
               Dominant crawler: {page.bot} / Platform: {page.platform}
             </p>

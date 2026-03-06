@@ -56,14 +56,16 @@ export default async function DashboardActivityPage({
   return (
     <div className="space-y-6">
       <AnalyticsScope sites={data.sites} selectedSiteId={data.selectedSiteId} />
-      <DashboardAnalyticsFilters
-        selectedDateRange={data.filters.dateRange}
-        trafficScope={data.filters.trafficScope}
-        selectedPlatform={data.filters.selectedPlatform}
-        selectedBotType={data.filters.selectedBotType}
-        platforms={data.filters.availablePlatforms}
-        botTypes={data.filters.availableBotTypes}
-      />
+      <div className="sticky top-48 z-30 md:top-40 xl:top-32">
+        <DashboardAnalyticsFilters
+          selectedDateRange={data.filters.dateRange}
+          trafficScope={data.filters.trafficScope}
+          selectedPlatform={data.filters.selectedPlatform}
+          selectedBotType={data.filters.selectedBotType}
+          platforms={data.filters.availablePlatforms}
+          botTypes={data.filters.availableBotTypes}
+        />
+      </div>
 
       <section>
         <article className="panel rounded-[1.5rem] p-5">
