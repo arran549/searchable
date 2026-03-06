@@ -31,8 +31,10 @@ export function assertProductionEnv() {
     return;
   }
 
-  if (!process.env.NEXT_PUBLIC_SITE_URL) {
-    throw new Error("Missing required environment variable in production: NEXT_PUBLIC_SITE_URL");
+  if (!process.env.SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL) {
+    throw new Error(
+      "Missing required environment variable in production: SITE_URL (or NEXT_PUBLIC_SITE_URL)",
+    );
   }
 }
 
