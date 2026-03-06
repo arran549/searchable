@@ -94,16 +94,17 @@ export const BOT_DEFINITIONS: BotDefinition[] = [
     matchers: [wordPattern("Bytespider")],
   },
 
-  // These are robots.txt policy tokens, not request user-agents. Keep them in the registry
-  // for future policy/verification work, but do not classify them from HTTP request UAs.
+  // Google-Extended is included here to satisfy PRD detection requirements for incoming
+  // crawler user agents.
   {
     id: "google-google-extended",
     name: "Google-Extended",
     platform: "Google",
     type: "training",
-    detectionTarget: "robots_policy",
+    detectionTarget: "request_user_agent",
     matchers: [wordPattern("Google-Extended")],
   },
+  // Applebot-Extended remains policy-only for now.
   {
     id: "apple-applebot-extended",
     name: "Applebot-Extended",

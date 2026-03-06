@@ -4,6 +4,7 @@ import { SiteInstallDialog } from "@/components/site-install-dialog";
 import { SiteRegistrationDialog } from "@/components/site-registration-dialog";
 import { SiteVerificationDialog } from "@/components/site-verification-dialog";
 import { SiteScopeFilter } from "@/components/site-scope-filter";
+import { updateSiteTrafficLoggingAction } from "@/app/dashboard/actions";
 import type {
   DashboardEvent,
   DashboardPageSummary,
@@ -505,10 +506,33 @@ export function SiteList({
           </div>
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
-            <p className="text-sm text-[var(--muted-foreground)]">
-              Use this domain’s tracking token to deploy the script or pixel install on the target
-              website.
-            </p>
+            <form
+              action={updateSiteTrafficLoggingAction}
+              className="flex w-full flex-wrap items-center justify-between gap-3"
+            >
+              <input type="hidden" name="siteId" value={site.id} />
+              <input type="hidden" name="returnTo" value={returnTo ?? "/dashboard/sites"} />
+              <label className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
+                <input
+                  type="checkbox"
+                  name="logNonAiTraffic"
+                  value="1"
+                  defaultChecked={site.log_non_ai_traffic}
+                />
+                Log non-AI traffic
+              </label>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full border border-[var(--border)] bg-white/75 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+                  {site.log_non_ai_traffic ? "AI + non-AI" : "AI only"}
+                </span>
+                <button
+                  type="submit"
+                  className="rounded-full border border-[var(--border)] bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)] transition hover:bg-[#f8fbf9]"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
             <div className="flex flex-wrap gap-2">
               <span className="rounded-full border border-[var(--border)] bg-white/75 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
                 Script available

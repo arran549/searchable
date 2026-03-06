@@ -54,6 +54,7 @@ export type Database = {
           created_at: string;
           domain: string;
           id: string;
+          log_non_ai_traffic: boolean;
           name: string | null;
           tracking_token: string;
           user_id: string;
@@ -64,6 +65,7 @@ export type Database = {
           created_at?: string;
           domain: string;
           id?: string;
+          log_non_ai_traffic?: boolean;
           name?: string | null;
           tracking_token?: string;
           user_id: string;

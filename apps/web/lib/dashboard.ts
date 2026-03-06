@@ -16,7 +16,14 @@ const platformTints = [
 
 export type DashboardSite = Pick<
   SiteRow,
-  "id" | "domain" | "name" | "tracking_token" | "verification_token" | "created_at" | "verified_at"
+  | "id"
+  | "domain"
+  | "name"
+  | "tracking_token"
+  | "verification_token"
+  | "created_at"
+  | "verified_at"
+  | "log_non_ai_traffic"
 > & {
   latest_event_at: string | null;
 };
@@ -117,7 +124,7 @@ export async function getDashboardData(options: DashboardDataOptions = {}) {
   const eventLimit = options.eventLimit ?? 1000;
   const { data: sites, error: sitesError } = await supabase
     .from("sites")
-    .select("id, domain, name, tracking_token, verification_token, created_at, verified_at")
+    .select("id, domain, name, tracking_token, verification_token, created_at, verified_at, log_non_ai_traffic")
     .order("created_at", { ascending: false });
 
   const safeSiteRows = sitesError ? [] : ((sites ?? []) as SiteRow[]);

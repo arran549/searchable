@@ -63,7 +63,7 @@ export async function resolveSiteByToken(token: string) {
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
     .from("sites")
-    .select("id, domain, tracking_token")
+    .select("id, domain, tracking_token, log_non_ai_traffic")
     .eq("tracking_token", token)
     .maybeSingle();
 
@@ -108,6 +108,10 @@ export async function insertEvent({
     matchedPattern: null,
     shouldTrack: true as const,
   };
+
+  if (resolvedBot.type === "non_ai" && !site.log_non_ai_traffic) {
+    return json({ ok: true, skipped: "non_ai_disabled" }, 202, request);
+  }
 
   const resolvedOccurredAt = occurredAt ?? new Date().toISOString();
   const ipAddress = getIpAddress(request);

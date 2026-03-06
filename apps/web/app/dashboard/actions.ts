@@ -246,3 +246,34 @@ export async function verifySiteAction(formData: FormData) {
 
   return redirectWithStatus(returnTo, "message", "Domain verified");
 }
+
+export async function updateSiteTrafficLoggingAction(formData: FormData) {
+  const siteId = getString(formData, "siteId");
+  const returnTo = normalizeReturnTo(getString(formData, "returnTo"));
+  const logNonAiTraffic = formData.get("logNonAiTraffic") === "1";
+
+  if (!siteId) {
+    return redirectWithStatus(returnTo, "error", "Missing site id");
+  }
+
+  const supabase = await getServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login?message=Please%20log%20in%20to%20update%20site%20settings");
+  }
+
+  const { error } = await supabase
+    .from("sites")
+    .update({ log_non_ai_traffic: logNonAiTraffic })
+    .eq("id", siteId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return redirectWithStatus(returnTo, "error", error.message);
+  }
+
+  return redirectWithStatus(returnTo, "message", `Non-AI traffic logging ${logNonAiTraffic ? "enabled" : "disabled"}`);
+}
