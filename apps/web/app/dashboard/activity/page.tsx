@@ -6,6 +6,7 @@ import {
   AnalyticsScope,
   SectionHeading,
 } from "@/components/dashboard-sections";
+import Link from "next/link";
 import {
   getDashboardData,
   normalizeDashboardFilterValue,
@@ -87,7 +88,7 @@ export default async function DashboardActivityPage({
           />
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <div className="inline-flex rounded-full border border-[var(--border)] bg-white/75 p-1">
-              <a
+              <Link
                 href={feedHref}
                 className={[
                   "rounded-full px-3 py-1.5 text-sm font-semibold transition",
@@ -97,8 +98,8 @@ export default async function DashboardActivityPage({
                 ].join(" ")}
               >
                 Feed
-              </a>
-              <a
+              </Link>
+              <Link
                 href={tableHref}
                 className={[
                   "rounded-full px-3 py-1.5 text-sm font-semibold transition",
@@ -108,7 +109,7 @@ export default async function DashboardActivityPage({
                 ].join(" ")}
               >
                 Table
-              </a>
+              </Link>
             </div>
             <a
               href={exportHref}
