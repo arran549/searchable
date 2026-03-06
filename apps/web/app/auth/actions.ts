@@ -1,6 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getServerSupabaseClient } from "@/lib/supabase/server";
@@ -56,39 +55,6 @@ function getConfiguredOrigin() {
   return null;
 }
 
-async function getRequestOrigin() {
-  const configured = getConfiguredOrigin();
-
-  if (configured) {
-    return configured;
-  }
-
-  // In production, require explicit origin config so auth emails never point
-  // to localhost due to proxy/internal host headers.
-  if (process.env.NODE_ENV === "production") {
-    return null;
-  }
-
-  const headerStore = await headers();
-  const origin = headerStore.get("origin");
-
-  if (origin) {
-    return { origin: normalizeOrigin(origin), source: "request:origin" };
-  }
-
-  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
-  const proto = headerStore.get("x-forwarded-proto") ?? "http";
-
-  if (host) {
-    return {
-      origin: `${proto}://${host}`.replace(/\/$/, ""),
-      source: "request:x-forwarded-host-or-host",
-    };
-  }
-
-  return null;
-}
-
 function isLocalOrigin(origin: string) {
   return (
     origin.startsWith("http://127.0.0.1:") ||
@@ -111,10 +77,10 @@ export async function signUpAction(formData: FormData) {
   }
 
   const supabase = await getServerSupabaseClient();
-  const resolvedOrigin = await getRequestOrigin();
+  const resolvedOrigin = getConfiguredOrigin();
   if (!resolvedOrigin) {
     redirect(
-      "/signup?error=Missing%20site%20origin%20configuration.%20Set%20NEXT_PUBLIC_SITE_URL%20for%20this%20deployment.",
+      "/signup?error=Missing%20site%20origin%20configuration.%20Set%20SITE_URL%20(or%20NEXT_PUBLIC_SITE_URL)%20for%20this%20deployment.",
     );
   }
 
