@@ -49,6 +49,14 @@ a {
   text-decoration: none;
 }
 
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 ::selection {
   background: rgb(62 207 142 / 0.25);
 }
