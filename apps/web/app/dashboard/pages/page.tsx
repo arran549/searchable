@@ -1,10 +1,10 @@
 import { DashboardAnalyticsFilters } from "@/components/dashboard-analytics-filters";
+import { PageBreakdownLeaderboard } from "@/components/page-breakdown-leaderboard";
 import {
   ActivityTrend,
   AnalyticsScope,
   DashboardNotice,
   PageVolumePanel,
-  PageLeaderboard,
   SectionHeading,
 } from "@/components/dashboard-sections";
 import {
@@ -58,12 +58,12 @@ export default async function DashboardPagesPage({
           <SectionHeading
             eyebrow="Pages"
             title="Top pages visited by AI crawlers"
-            description="PRD FR-3.3 ranking of pages by crawler visit count, with the same filters applied across all dashboard views."
+            description="Ranking of pages by crawler visits, using the same filters applied across all dashboard views."
             meta={`${data.topPages.length} ranked pages / ${totalVisits} visits`}
           />
           <PageVolumePanel pages={data.topPages} limit={8} />
           <div className="mt-5">
-            <PageLeaderboard pages={data.topPages} />
+            <PageBreakdownLeaderboard pages={data.topPages} events={data.events} />
           </div>
         </article>
 
@@ -71,7 +71,7 @@ export default async function DashboardPagesPage({
           <SectionHeading
             eyebrow="Coverage"
             title="Crawl coverage summary"
-            description="Quick summary for US-2 so you can identify high-value content getting crawler attention."
+            description="Quick summary to help identify high-value content getting crawler attention."
             meta={topPage ? `${topPage.path} is currently #1` : "No page activity yet"}
           />
 

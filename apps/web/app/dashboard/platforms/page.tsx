@@ -58,7 +58,7 @@ export default async function DashboardPlatformsPage({
           <SectionHeading
             eyebrow="Snapshot"
             title="Current platform readout"
-            description="High-level summary for PRD user story US-1: who is crawling and how concentrated the mix is."
+            description="High-level summary of who is crawling and how concentrated the platform mix is."
           />
 
           <div className="grid gap-3">
@@ -105,7 +105,7 @@ export default async function DashboardPlatformsPage({
         <SectionHeading
           eyebrow="Trend"
           title="Crawler activity trend over time"
-          description="Timeline for FR-3.4, reflecting the same platform and bot filters currently applied."
+          description="Timeline reflecting the same platform and bot filters currently applied."
         />
         <ActivityTrend
           points={data.timeline}

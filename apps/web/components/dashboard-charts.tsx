@@ -14,6 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useMemo, useState } from "react";
 
 import type { DashboardPageSummary, DashboardPlatform, DashboardTimelinePoint } from "@/lib/dashboard";
 
@@ -32,11 +33,13 @@ function ChartTooltip({
   payload,
   label,
   labelSuffix,
+  showAllSeries = false,
 }: {
   active?: boolean;
-  payload?: Array<{ value?: number; payload?: { visits?: number } }>;
+  payload?: Array<{ value?: number; payload?: { visits?: number }; name?: string; color?: string }>;
   label?: string;
   labelSuffix?: string;
+  showAllSeries?: boolean;
 }) {
   if (!active || !payload?.length) {
     return null;
@@ -49,9 +52,26 @@ function ChartTooltip({
       {label ? (
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">{label}</p>
       ) : null}
-      <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
-        {value} visits{labelSuffix ? ` ${labelSuffix}` : ""}
-      </p>
+      {showAllSeries ? (
+        <div className="mt-2 space-y-1">
+          {payload
+            .filter((entry) => (entry.value ?? 0) > 0)
+            .sort((left, right) => (right.value ?? 0) - (left.value ?? 0))
+            .map((entry) => (
+              <p key={entry.name} className="text-xs font-medium text-[var(--foreground)]">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                  <span>{entry.name}</span>
+                </span>{" "}
+                <span className="font-semibold">{entry.value ?? 0}</span>
+              </p>
+            ))}
+        </div>
+      ) : (
+        <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+          {value} visits{labelSuffix ? ` ${labelSuffix}` : ""}
+        </p>
+      )}
     </div>
   );
 }
@@ -69,13 +89,63 @@ export function TimelineLineChart({
     );
   }
 
+  const [mode, setMode] = useState<"aggregate" | "platform">("aggregate");
+  const platformKeys = useMemo(
+    () =>
+      Array.from(new Set(points.flatMap((point) => Object.keys(point.platformVisits))))
+        .sort((left, right) => left.localeCompare(right)),
+    [points],
+  );
+  const supportsPlatformSeries = platformKeys.length > 1;
+  const seriesData = useMemo(
+    () =>
+      points.map((point) => ({
+        ...Object.fromEntries(platformKeys.map((platform) => [platform, 0])),
+        label: point.label,
+        visits: point.visits,
+        ...point.platformVisits,
+      })),
+    [platformKeys, points],
+  );
+  const effectiveMode = supportsPlatformSeries ? mode : "aggregate";
+
   return (
     <div className="space-y-4">
-      <p className="text-sm leading-6 text-[var(--muted-foreground)]">{caption}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm leading-6 text-[var(--muted-foreground)]">{caption}</p>
+        <div className="inline-flex rounded-full border border-[var(--border)] bg-white/75 p-1">
+          <button
+            type="button"
+            onClick={() => setMode("aggregate")}
+            className={[
+              "rounded-full px-3 py-1.5 text-sm font-semibold transition",
+              effectiveMode === "aggregate"
+                ? "bg-[var(--accent)] text-[#0a1014]"
+                : "text-[var(--foreground)] hover:bg-white",
+            ].join(" ")}
+          >
+            Aggregate
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("platform")}
+            disabled={!supportsPlatformSeries}
+            className={[
+              "rounded-full px-3 py-1.5 text-sm font-semibold transition",
+              effectiveMode === "platform"
+                ? "bg-[var(--accent)] text-[#0a1014]"
+                : "text-[var(--foreground)] hover:bg-white",
+              !supportsPlatformSeries ? "cursor-not-allowed opacity-50 hover:bg-transparent" : "",
+            ].join(" ")}
+          >
+            By platform
+          </button>
+        </div>
+      </div>
       <div className="rounded-[1.5rem] border border-[var(--border)] bg-white/60 p-4">
         <div className="h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={points} margin={{ top: 12, right: 12, bottom: 4, left: -24 }}>
+            <LineChart data={seriesData} margin={{ top: 12, right: 12, bottom: 4, left: -24 }}>
               <CartesianGrid stroke="rgba(17,24,28,0.08)" vertical={false} />
               <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#5a6762", fontSize: 12 }} />
               <YAxis
@@ -84,15 +154,30 @@ export function TimelineLineChart({
                 axisLine={false}
                 tick={{ fill: "#5a6762", fontSize: 12 }}
               />
-              <Tooltip content={<ChartTooltip labelSuffix="in bucket" />} />
-              <Line
-                type="monotone"
-                dataKey="visits"
-                stroke="#c7652b"
-                strokeWidth={3}
-                dot={{ r: 4, fill: "#c7652b", strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: "#132230", stroke: "#fff", strokeWidth: 2 }}
-              />
+              <Tooltip content={<ChartTooltip labelSuffix="in bucket" showAllSeries={effectiveMode === "platform"} />} />
+              {effectiveMode === "aggregate" ? (
+                <Line
+                  type="monotone"
+                  dataKey="visits"
+                  stroke="#c7652b"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: "#c7652b", strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: "#132230", stroke: "#fff", strokeWidth: 2 }}
+                />
+              ) : (
+                platformKeys.map((platform, index) => (
+                  <Line
+                    key={platform}
+                    type="monotone"
+                    dataKey={platform}
+                    name={platform}
+                    stroke={chartPalette[index % chartPalette.length]}
+                    strokeWidth={2.25}
+                    dot={{ r: 3, fill: chartPalette[index % chartPalette.length], strokeWidth: 0 }}
+                    activeDot={{ r: 5, stroke: "#fff", strokeWidth: 2 }}
+                  />
+                ))
+              )}
             </LineChart>
           </ResponsiveContainer>
         </div>

@@ -56,6 +56,7 @@ export type DashboardTrafficScope = (typeof dashboardTrafficScopes)[number];
 export type DashboardTimelinePoint = {
   label: string;
   visits: number;
+  platformVisits: Record<string, number>;
 };
 
 type DashboardDataOptions = {
@@ -357,20 +358,37 @@ function buildTimeline(events: DashboardEvent[], dateRange: DashboardDateRange):
 
   return buckets.map((bucket, index) => {
     const nextStart = buckets[index + 1]?.start ?? now;
-    const visits = events.reduce((count, event) => {
-      const occurredAt = new Date(event.occurred_at).getTime();
-      const startsAt = bucket.start.getTime();
-      const endsAt = nextStart.getTime();
-      if (index === buckets.length - 1) {
-        return occurredAt >= startsAt ? count + 1 : count;
-      }
+    const bucketCounts = events.reduce(
+      (accumulator, event) => {
+        const occurredAt = new Date(event.occurred_at).getTime();
+        const startsAt = bucket.start.getTime();
+        const endsAt = nextStart.getTime();
+        const inBucket = index === buckets.length - 1
+          ? occurredAt >= startsAt
+          : occurredAt >= startsAt && occurredAt < endsAt;
+        if (!inBucket) {
+          return accumulator;
+        }
 
-      return occurredAt >= startsAt && occurredAt < endsAt ? count + 1 : count;
-    }, 0);
+        const platform = event.platform || "Unknown";
+        return {
+          visits: accumulator.visits + 1,
+          platformVisits: {
+            ...accumulator.platformVisits,
+            [platform]: (accumulator.platformVisits[platform] ?? 0) + 1,
+          },
+        };
+      },
+      {
+        visits: 0,
+        platformVisits: {} as Record<string, number>,
+      },
+    );
 
     return {
       label: bucket.label,
-      visits,
+      visits: bucketCounts.visits,
+      platformVisits: bucketCounts.platformVisits,
     };
   });
 }

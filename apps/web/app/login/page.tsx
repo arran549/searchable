@@ -12,7 +12,20 @@ type LoginPageProps = {
   }>;
 };
 
-const highlights = ["Domain onboarding", "Crawler attribution", "Timeline analytics"];
+const returnFlow = [
+  {
+    title: "Authenticate",
+    detail: "Sign in with the email and password tied to your protected Searchable workspace.",
+  },
+  {
+    title: "Resume setup",
+    detail: "Continue domain verification, snippet installation, or crawler token validation.",
+  },
+  {
+    title: "Review analytics",
+    detail: "Inspect recent crawler/platform activity and confirm event ingestion health.",
+  },
+];
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { error, message } = await searchParams;
@@ -27,43 +40,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="shell px-4 py-8 md:px-6 md:py-12">
-      <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <aside className="panel relative overflow-hidden rounded-[2rem] border-[#203042] bg-[#112033] p-6 text-[#fae8c8] md:p-8">
-          <div className="pointer-events-none absolute -top-16 -left-16 h-44 w-44 rounded-full bg-[#3ecf8e]/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -right-10 h-52 w-52 rounded-full bg-[#f59e0b]/20 blur-3xl" />
-
-          <div className="relative">
-            <p className="mb-3 inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#f4dec0]">
-              Searchable auth
-            </p>
-            <h1 className="max-w-lg text-4xl font-semibold tracking-[-0.05em]">
-              Log in to view your crawler analytics.
-            </h1>
-            <p className="mt-4 max-w-lg text-sm leading-7 text-[#f4dec0]">
-              Pick up where you left off with protected access to domain setup, event ingestion, and
-              platform-level reporting.
-            </p>
-
-            <div className="mt-6 flex flex-wrap gap-2">
-              {highlights.map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full border border-white/15 bg-white/8 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#f4dec0]"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-
-            <div className="mt-8 rounded-[1.5rem] border border-white/15 bg-white/8 p-5">
-              <p className="text-sm leading-7 text-[#f4dec0]">
-                New here? Create an account, register your domain, install tracking, and verify the
-                first crawler event in minutes.
-              </p>
-            </div>
-          </div>
-        </aside>
-
+      <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-4">
           {message ? (
             <div className="rounded-2xl border border-[var(--border)] bg-white/70 px-4 py-3 text-sm">
@@ -94,6 +71,42 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </Link>
           </p>
         </div>
+
+        <aside className="relative overflow-hidden rounded-[2rem] border border-[#203042] bg-[#112033] p-6 text-[#fef9e6] shadow-[var(--shadow)] md:p-8">
+          <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-[#f59e0b]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-10 h-52 w-52 rounded-full bg-[#3ecf8e]/20 blur-3xl" />
+
+          <div className="relative">
+            <p className="mb-4 inline-flex rounded-full border border-white/20 bg-white/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#fef2d6]">
+              Welcome back
+            </p>
+            <h1 className="max-w-lg text-4xl font-semibold tracking-[-0.05em] text-white">
+              Log in and continue where you left off.
+            </h1>
+            <p className="mt-5 max-w-lg text-base leading-7 text-[#fef2d6]">
+              Your workspace is ready. Re-enter to finish onboarding tasks and monitor crawler analytics in real time.
+            </p>
+
+            <div className="mt-8 grid gap-4">
+              {returnFlow.map((step, index) => (
+                <article
+                  key={step.title}
+                  className="group rounded-2xl border border-white/20 bg-white/10 px-5 py-4 transition hover:border-white/40 hover:bg-white/15"
+                >
+                  <div className="flex items-start gap-4">
+                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/30 bg-[#0f1b2b] text-sm font-semibold text-white">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <p className="text-base font-semibold text-white">{step.title}</p>
+                      <p className="mt-1.5 text-sm leading-6 text-[#fef2d6]">{step.detail}</p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </aside>
       </div>
     </main>
   );

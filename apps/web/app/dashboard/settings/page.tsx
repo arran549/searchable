@@ -22,7 +22,7 @@ export default async function DashboardSettingsPage({
       <section className="space-y-4">
         <SiteRegistrationCard />
 
-        <article className="panel rounded-[1.5rem] p-5">
+        <article className="panel min-w-0 overflow-x-hidden rounded-[1.5rem] p-5">
           <SectionHeading
             eyebrow="Install"
             title="Generated snippets per site"

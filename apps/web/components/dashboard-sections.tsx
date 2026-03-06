@@ -366,13 +366,13 @@ export function InstallSnippetGrid({
   }
 
   return (
-    <div className="grid gap-4 2xl:grid-cols-2">
+    <div className="grid min-w-0 gap-4">
       {sites.map((site) => (
-        <article key={site.id} className="panel rounded-[1.5rem] p-5">
+        <article key={site.id} className="panel min-w-0 overflow-x-hidden rounded-[1.5rem] p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <p className="text-lg font-semibold tracking-[-0.02em]">{site.name || site.domain}</p>
-              <p className="text-sm text-[var(--muted-foreground)]">{site.domain}</p>
+              <p className="break-all text-sm text-[var(--muted-foreground)]">{site.domain}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="rounded-full border border-[var(--border)] px-3 py-1 text-xs text-[var(--muted-foreground)]">

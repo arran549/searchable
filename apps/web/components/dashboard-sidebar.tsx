@@ -29,19 +29,7 @@ export function DashboardSidebar({ userEmail }: DashboardSidebarProps) {
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#9aa9a2]">
               Workspace
             </p>
-            <p className="mt-2 text-sm font-medium text-white">{userEmail}</p>
-            <p className="mt-2 text-sm text-[#9aa9a2]">Domain instrumentation and crawler QA in one place.</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] font-medium text-[#b9c4bf]">
-                Domains
-              </span>
-              <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] font-medium text-[#b9c4bf]">
-                Installs
-              </span>
-              <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] font-medium text-[#b9c4bf]">
-                Activity
-              </span>
-            </div>
+            <p className="mt-1.5 text-sm font-medium text-white">{userEmail}</p>
           </div>
         </div>
 

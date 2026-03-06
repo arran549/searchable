@@ -66,9 +66,23 @@ export default async function DashboardActivityPage({
       <section>
         <article className="panel rounded-[1.5rem] p-5">
           <SectionHeading
+            eyebrow="Trend"
+            title="Crawler activity over time"
+            description="Timeline view to track movement and detect shifts in crawler behavior."
+          />
+          <ActivityTrend
+            points={data.timeline}
+            caption={`Showing ${data.filters.dateRange.toUpperCase()} trend for ${data.filters.selectedPlatform ?? "all platforms"} and ${data.filters.selectedBotType ?? "all bot types"}.`}
+          />
+        </article>
+      </section>
+
+      <section>
+        <article className="panel rounded-[1.5rem] p-5">
+          <SectionHeading
             eyebrow="Activity"
             title="Recent crawler activity log"
-            description="PRD FR-3.6 event log with filterable scope by date range, platform, and bot type."
+            description="Event log with filterable scope by date range, platform, and bot type."
             meta={`${data.events.length} events in filtered view`}
           />
           <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -104,20 +118,6 @@ export default async function DashboardActivityPage({
             </a>
           </div>
           {selectedView === "table" ? <ActivityTable events={data.events} /> : <ActivityFeed events={data.events} />}
-        </article>
-      </section>
-
-      <section>
-        <article className="panel rounded-[1.5rem] p-5">
-          <SectionHeading
-            eyebrow="Trend"
-            title="Crawler activity over time"
-            description="Timeline view to track movement and detect shifts in crawler behavior (US-3)."
-          />
-          <ActivityTrend
-            points={data.timeline}
-            caption={`Showing ${data.filters.dateRange.toUpperCase()} trend for ${data.filters.selectedPlatform ?? "all platforms"} and ${data.filters.selectedBotType ?? "all bot types"}.`}
-          />
         </article>
       </section>
     </div>
