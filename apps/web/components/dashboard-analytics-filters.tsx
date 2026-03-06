@@ -25,6 +25,13 @@ export function DashboardAnalyticsFilters({
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const orderedBotTypes = [...botTypes].sort((left, right) => {
+    const leftRank = botTypeRank[left] ?? Number.MAX_SAFE_INTEGER;
+    const rightRank = botTypeRank[right] ?? Number.MAX_SAFE_INTEGER;
+
+    return leftRank - rightRank ||
+      left.localeCompare(right);
+  });
 
   function onChange(key: "range" | "traffic" | "platform" | "botType", value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -86,9 +93,9 @@ export function DashboardAnalyticsFilters({
             onChange={(next) => onChange("botType", next)}
             options={[
               { value: "all", label: "All bot types" },
-              ...botTypes.map((botType) => ({
+              ...orderedBotTypes.map((botType) => ({
                 value: botType,
-                label: botType,
+                label: formatBotTypeLabel(botType),
               })),
             ]}
           />
@@ -96,6 +103,21 @@ export function DashboardAnalyticsFilters({
       </div>
     </div>
   );
+}
+
+const botTypeOrder = ["training", "search", "assistant", "unknown", "non_ai"] as const;
+const botTypeRank = Object.fromEntries(botTypeOrder.map((value, index) => [value, index])) as Record<string, number>;
+
+function formatBotTypeLabel(botType: string) {
+  const labels: Record<string, string> = {
+    training: "AI Training",
+    search: "AI Search",
+    assistant: "AI Assistant",
+    unknown: "Unknown",
+    non_ai: "Non-AI Traffic",
+  };
+
+  return labels[botType] ?? botType.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function FilterSelect({
