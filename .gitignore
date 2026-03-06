@@ -19,3 +19,4 @@ apps/web/.vercel
 
 supabase/.branches
 supabase/.temp
+apps/web/tsconfig.tsbuildinfo
