@@ -1,0 +1,39 @@
+meta {
+  name: post track event - CCBot
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/functions/v1/track
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Authorization: Bearer {{publishableKey}}
+  apikey: {{publishableKey}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "token": "{{trackToken}}",
+    "pageUrl": "{{pageUrl}}",
+    "pagePath": "{{pagePath}}",
+    "userAgent": "CCBot/2.0",
+    "source": "script"
+  }
+}
+
+tests {
+  test("returns accepted", function () {
+    expect(res.getStatus()).to.equal(202);
+  });
+
+  test("returns ok true", function () {
+    const body = res.getBody();
+    expect(body.ok).to.equal(true);
+  });
+}
