@@ -11,38 +11,56 @@ function getString(formData: FormData, key: string) {
 }
 
 function normalizeOrigin(origin: string) {
-  return origin.replace(/\/$/, "");
+  const trimmed = origin.trim().replace(/\/$/, "");
+
+  try {
+    return new URL(trimmed).origin;
+  } catch {
+    return trimmed;
+  }
 }
 
 function getConfiguredOrigin() {
-  const explicit =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    process.env.SITE_URL ??
-    process.env.NEXT_PUBLIC_APP_URL;
+  const explicitCandidates = [
+    { key: "SITE_URL", value: process.env.SITE_URL },
+    { key: "NEXT_PUBLIC_SITE_URL", value: process.env.NEXT_PUBLIC_SITE_URL },
+    { key: "NEXT_PUBLIC_APP_URL", value: process.env.NEXT_PUBLIC_APP_URL },
+  ];
 
-  if (explicit) {
-    return normalizeOrigin(explicit);
+  for (const candidate of explicitCandidates) {
+    if (candidate.value) {
+      return {
+        origin: normalizeOrigin(candidate.value),
+        source: candidate.key,
+      };
+    }
   }
 
   const vercelUrl = process.env.VERCEL_URL;
   const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
 
   if (vercelProductionUrl) {
-    return `https://${vercelProductionUrl}`;
+    return {
+      origin: `https://${vercelProductionUrl}`,
+      source: "VERCEL_PROJECT_PRODUCTION_URL",
+    };
   }
 
   if (vercelUrl) {
-    return `https://${vercelUrl}`;
+    return {
+      origin: `https://${vercelUrl}`,
+      source: "VERCEL_URL",
+    };
   }
 
   return null;
 }
 
 async function getRequestOrigin() {
-  const configuredOrigin = getConfiguredOrigin();
+  const configured = getConfiguredOrigin();
 
-  if (configuredOrigin) {
-    return configuredOrigin;
+  if (configured) {
+    return configured;
   }
 
   // In production, require explicit origin config so auth emails never point
@@ -55,14 +73,17 @@ async function getRequestOrigin() {
   const origin = headerStore.get("origin");
 
   if (origin) {
-    return normalizeOrigin(origin);
+    return { origin: normalizeOrigin(origin), source: "request:origin" };
   }
 
   const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
   const proto = headerStore.get("x-forwarded-proto") ?? "http";
 
   if (host) {
-    return `${proto}://${host}`.replace(/\/$/, "");
+    return {
+      origin: `${proto}://${host}`.replace(/\/$/, ""),
+      source: "request:x-forwarded-host-or-host",
+    };
   }
 
   return null;
@@ -77,6 +98,10 @@ function isLocalOrigin(origin: string) {
   );
 }
 
+function isHttpsOrigin(origin: string) {
+  return origin.startsWith("https://");
+}
+
 export async function signUpAction(formData: FormData) {
   const email = getString(formData, "email");
   const password = getString(formData, "password");
@@ -86,12 +111,34 @@ export async function signUpAction(formData: FormData) {
   }
 
   const supabase = await getServerSupabaseClient();
-  const origin = await getRequestOrigin();
-  if (!origin) {
+  const resolvedOrigin = await getRequestOrigin();
+  if (!resolvedOrigin) {
     redirect(
       "/signup?error=Missing%20site%20origin%20configuration.%20Set%20NEXT_PUBLIC_SITE_URL%20for%20this%20deployment.",
     );
   }
+
+  const { origin, source } = resolvedOrigin;
+
+  if (process.env.NODE_ENV === "production" && isLocalOrigin(origin)) {
+    console.error("Invalid localhost auth origin in production", {
+      source,
+      origin,
+    });
+    redirect(
+      "/signup?error=Invalid%20production%20site%20origin.%20NEXT_PUBLIC_SITE_URL%20(or%20SITE_URL)%20is%20set%20to%20localhost.",
+    );
+  }
+  if (process.env.NODE_ENV === "production" && !isHttpsOrigin(origin)) {
+    console.error("Invalid non-https auth origin in production", {
+      source,
+      origin,
+    });
+    redirect("/signup?error=Invalid%20production%20site%20origin.%20Use%20an%20HTTPS%20URL.");
+  }
+
+  console.info("Using signup email redirect origin", { source, origin });
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
