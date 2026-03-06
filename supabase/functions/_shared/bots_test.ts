@@ -88,10 +88,13 @@ Deno.test("returns unknown for empty user agents", () => {
   assertEquals(result, UNKNOWN_BOT_CLASSIFICATION);
 });
 
-Deno.test("does not classify Google-Extended from HTTP request user agents", () => {
+Deno.test("classifies Google-Extended as a known Google training bot", () => {
   const result = classifyBot("Mozilla/5.0 Google-Extended");
 
-  assertEquals(result, UNKNOWN_BOT_CLASSIFICATION);
+  assertEquals(result.id, "google-google-extended");
+  assertEquals(result.platform, "Google");
+  assertEquals(result.type, "training");
+  assertEquals(result.detectionTarget, "request_user_agent");
 });
 
 Deno.test("tracks unknown bot-like user agents as Unknown", () => {
@@ -116,14 +119,14 @@ Deno.test("policy-only bots remain available in the registry for future use", ()
 
   assertEquals(
     policyBots.map((bot) => bot.id),
-    ["google-google-extended", "apple-applebot-extended"],
+    ["apple-applebot-extended"],
   );
 });
 
 Deno.test("supported request bot registry excludes policy-only entries", () => {
   const requestBots = getSupportedRequestBots();
 
-  assertEquals(requestBots.some((bot) => bot.id === "google-google-extended"), false);
+  assertEquals(requestBots.some((bot) => bot.id === "google-google-extended"), true);
   assertEquals(
     requestBots.map((bot) => bot.id),
     [
@@ -135,6 +138,7 @@ Deno.test("supported request bot registry excludes policy-only entries", () => {
       "meta-external-agent",
       "commoncrawl-ccbot",
       "bytedance-bytespider",
+      "google-google-extended",
     ],
   );
 });
