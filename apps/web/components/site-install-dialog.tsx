@@ -15,9 +15,20 @@ export function SiteInstallDialog({ site, supabaseUrl }: SiteInstallDialogProps)
   const [open, setOpen] = useState(false);
   const [method, setMethod] = useState<"script" | "pixel">("script");
   const [spaEnabled, setSpaEnabled] = useState(false);
+  const [nonAiEnabled, setNonAiEnabled] = useState(site.log_non_ai_traffic);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const scriptSnippet = getScriptInstallSnippet(supabaseUrl, site.tracking_token, { spa: spaEnabled });
-  const pixelSnippet = getPixelInstallSnippet(supabaseUrl, site.tracking_token);
+  const scriptSnippet = getScriptInstallSnippet(supabaseUrl, site.tracking_token, {
+    spa: spaEnabled,
+    nonAi: nonAiEnabled,
+  });
+  const pixelSnippet = getPixelInstallSnippet(supabaseUrl, site.tracking_token, {
+    nonAi: nonAiEnabled,
+  });
+  const nonAiEffectiveLabel = !nonAiEnabled
+    ? "Disabled (forced by snippet)"
+    : site.log_non_ai_traffic
+      ? "Enabled (portal default)"
+      : "Disabled (portal default)";
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -137,35 +148,41 @@ export function SiteInstallDialog({ site, supabaseUrl }: SiteInstallDialogProps)
                 </button>
               </div>
 
-              <InstallSnippetBlock
-                title={method === "script" ? "Recommended script" : "HTML pixel fallback"}
-                description={
-                  method === "script"
-                    ? "Best for modern sites, apps, and templates where you want the full client-side tracking flow."
-                    : "Use this for static HTML blocks, CMS embeds, or environments where scripts are constrained."
-                }
-                code={method === "script" ? scriptSnippet : pixelSnippet}
-                copyLabel={method === "script" ? "Copy script" : "Copy pixel"}
-                scriptControls={
-                  method === "script" ? (
-                    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
-                      <span>SPA Tracking</span>
-                      <button
-                        type="button"
-                        onClick={() => setSpaEnabled((value) => !value)}
-                        className={[
-                          "cursor-pointer rounded-full px-2 py-1 text-[11px] transition",
-                          spaEnabled
-                            ? "bg-[#132230] text-white"
-                            : "bg-white text-[var(--foreground)] border border-[var(--border)]",
-                        ].join(" ")}
-                      >
-                        {spaEnabled ? "On" : "Off"}
-                      </button>
-                    </div>
-                  ) : null
-                }
-              />
+                <InstallSnippetBlock
+                  title={method === "script" ? "Recommended script" : "HTML pixel fallback"}
+                  description={
+                    method === "script"
+                      ? "Best for modern sites, apps, and templates where you want the full client-side tracking flow."
+                      : "Use this for static HTML blocks, CMS embeds, or environments where scripts are constrained."
+                  }
+                  code={method === "script" ? scriptSnippet : pixelSnippet}
+                  copyLabel={method === "script" ? "Copy script" : "Copy pixel"}
+                  scriptControls={
+                    method === "script" ? (
+                      <div className="inline-flex flex-wrap items-center gap-2">
+                        <InlineToggle
+                          label="SPA Tracking"
+                          checked={spaEnabled}
+                          onToggle={() => setSpaEnabled((value) => !value)}
+                        />
+                        <InlineToggle
+                          label="Log Non-AI Traffic"
+                          checked={nonAiEnabled}
+                          onToggle={() => setNonAiEnabled((value) => !value)}
+                        />
+                      </div>
+                    ) : null
+                  }
+                  sharedControls={
+                    method === "pixel" ? (
+                      <InlineToggle
+                        label="Log Non-AI Traffic"
+                        checked={nonAiEnabled}
+                        onToggle={() => setNonAiEnabled((value) => !value)}
+                      />
+                    ) : null
+                  }
+                />
 
               <article className="rounded-[1.5rem] border border-[var(--border)] bg-white/60 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
@@ -188,6 +205,7 @@ export function SiteInstallDialog({ site, supabaseUrl }: SiteInstallDialogProps)
                 <div className="mt-4 grid gap-3">
                   {[
                     "Place the script in the shared layout or global template for site-wide coverage.",
+                    "SPA tracking controls route-change capture only. Non-AI logging controls whether non-bot browser traffic is stored.",
                     "Use the pixel only when script injection is not practical.",
                     "After deploy, confirm the first event in Activity to validate the pipeline.",
                   ].map((item, index) => (
@@ -201,6 +219,15 @@ export function SiteInstallDialog({ site, supabaseUrl }: SiteInstallDialogProps)
                       <span>{item}</span>
                     </div>
                   ))}
+                </div>
+                <div className="mt-4 rounded-2xl border border-[var(--border)] bg-white/80 px-4 py-3 text-sm leading-6 text-[var(--muted-foreground)]">
+                  <p>
+                    Portal setting is the default. This install toggle can only force non-AI logging off for this
+                    snippet.
+                  </p>
+                  <p className="mt-2 font-medium text-[var(--foreground)]">
+                    Effective non-AI logging for this snippet: {nonAiEffectiveLabel}
+                  </p>
                 </div>
               </article>
             </div>
@@ -217,12 +244,14 @@ function InstallSnippetBlock({
   code,
   copyLabel,
   scriptControls,
+  sharedControls,
 }: {
   title: string;
   description: string;
   code: string;
   copyLabel: string;
   scriptControls?: ReactNode;
+  sharedControls?: ReactNode;
 }) {
   return (
     <article className="rounded-[1.5rem] border border-[var(--border)] bg-white/60 p-4">
@@ -238,13 +267,47 @@ function InstallSnippetBlock({
               <CopyButton value={code} label={copyLabel} />
             </div>
           ) : null}
+          {!scriptControls && sharedControls ? (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              {sharedControls}
+              <CopyButton value={code} label={copyLabel} />
+            </div>
+          ) : null}
         </div>
-        {!scriptControls ? <CopyButton value={code} label={copyLabel} /> : null}
+        {!scriptControls && !sharedControls ? <CopyButton value={code} label={copyLabel} /> : null}
       </div>
 
       <pre className="mt-4 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[#fffdf8] p-3 text-xs leading-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
         <code>{code}</code>
       </pre>
     </article>
+  );
+}
+
+function InlineToggle({
+  label,
+  checked,
+  onToggle,
+}: {
+  label: string;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+      <span>{label}</span>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={[
+          "cursor-pointer rounded-full px-2 py-1 text-[11px] transition",
+          checked
+            ? "bg-[#132230] text-white"
+            : "bg-white text-[var(--foreground)] border border-[var(--border)]",
+        ].join(" ")}
+      >
+        {checked ? "On" : "Off"}
+      </button>
+    </div>
   );
 }

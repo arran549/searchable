@@ -18,21 +18,32 @@ export function getTrackingUrls(supabaseUrl: string) {
 export function getScriptInstallSnippet(
   supabaseUrl: string,
   trackingToken: string,
-  options?: { spa?: boolean },
+  options?: { spa?: boolean; nonAi?: boolean },
 ) {
   const { scriptUrl } = getTrackingUrls(supabaseUrl);
   const params = new URLSearchParams({ token: trackingToken });
   if (options?.spa) {
     params.set("spa", "1");
   }
+  if (options?.nonAi === false) {
+    params.set("non_ai", "0");
+  }
   const url = `${scriptUrl}?${params.toString()}`;
 
   return `<script async src="${escapeAttribute(url)}"></script>`;
 }
 
-export function getPixelInstallSnippet(supabaseUrl: string, trackingToken: string) {
+export function getPixelInstallSnippet(
+  supabaseUrl: string,
+  trackingToken: string,
+  options?: { nonAi?: boolean },
+) {
   const { pixelUrl } = getTrackingUrls(supabaseUrl);
-  const url = `${pixelUrl}?token=${encodeURIComponent(trackingToken)}`;
+  const params = new URLSearchParams({ token: trackingToken });
+  if (options?.nonAi === false) {
+    params.set("non_ai", "0");
+  }
+  const url = `${pixelUrl}?${params.toString()}`;
 
   return `<img src="${escapeAttribute(url)}" alt="" width="1" height="1" style="display:none" />`;
 }

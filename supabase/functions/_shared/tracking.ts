@@ -13,6 +13,7 @@ export type TrackPayload = {
   referrer?: string;
   title?: string;
   source?: string;
+  logNonAiTraffic?: boolean;
 };
 
 function getSupabaseAdminClient() {
@@ -84,6 +85,7 @@ export async function insertEvent({
   referrer,
   title,
   source,
+  logNonAiTraffic,
   request,
 }: TrackPayload & { request: Request }) {
   if (!token || !pageUrl) {
@@ -109,7 +111,8 @@ export async function insertEvent({
     shouldTrack: true as const,
   };
 
-  if (resolvedBot.type === "non_ai" && !site.log_non_ai_traffic) {
+  const shouldLogNonAiTraffic = logNonAiTraffic ?? site.log_non_ai_traffic;
+  if (resolvedBot.type === "non_ai" && !shouldLogNonAiTraffic) {
     return json({ ok: true, skipped: "non_ai_disabled" }, 202, request);
   }
 

@@ -53,6 +53,24 @@ In your hosted Supabase project, also set Auth URL Configuration (`Site URL` and
 - `npm run test:bot-classification` runs unit tests for the bot matcher.
 - `npm run test:functions` runs Deno tests under `supabase/functions`.
 
+## Production deployment (Supabase)
+
+Use the Supabase CLI from the repo root. `db push` applies SQL migrations in `supabase/migrations`, and `functions deploy` publishes edge functions from `supabase/functions`.
+
+1. Authenticate and link this repo to your Supabase project:
+   - `npx supabase login`
+   - `npx supabase link --project-ref <project-ref> -p <db-password>`
+2. Apply database migrations to production:
+   - `npx supabase db push`
+3. Set required edge function secrets (if not already set):
+   - `npx supabase secrets set SUPABASE_URL=<project-url> SUPABASE_SERVICE_ROLE_KEY=<service-role-key>`
+4. Deploy the tracking edge function:
+   - `npx supabase functions deploy track`
+
+Optional checks:
+- `npx supabase migration list`
+- `npx supabase db push --dry-run`
+
 ## What is already wired
 
 - Root workspace scripts and editor defaults.

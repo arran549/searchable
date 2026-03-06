@@ -116,23 +116,27 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-Deno.test("getScriptInstallSnippet renders token, spa option, and escaped src attribute", () => {
+Deno.test("getScriptInstallSnippet renders token, options, and escaped src attribute", () => {
   const snippet = getScriptInstallSnippet(
     "https://api.example.com/track.js",
     `abc"&x=1`,
-    { spa: true },
+    { spa: true, nonAi: false },
   );
 
   assertStringIncludes(snippet, "<script async src=\"");
   assertStringIncludes(snippet, "token=abc%22%26x%3D1");
   assertStringIncludes(snippet, "spa=1");
+  assertStringIncludes(snippet, "non_ai=0");
   assertStringIncludes(snippet, "&amp;");
 });
 
 Deno.test("getPixelInstallSnippet URL-encodes token and keeps required attributes", () => {
-  const snippet = getPixelInstallSnippet("https://api.example.com/pixel.gif", `tok"&n=1`);
+  const snippet = getPixelInstallSnippet("https://api.example.com/pixel.gif", `tok"&n=1`, {
+    nonAi: false,
+  });
 
   assertStringIncludes(snippet, "token=tok%22%26n%3D1");
+  assertStringIncludes(snippet, "non_ai=0");
   assertStringIncludes(snippet, "width=\"1\"");
   assertStringIncludes(snippet, "height=\"1\"");
   assertStringIncludes(snippet, "display:none");
@@ -171,6 +175,7 @@ Deno.test("script source tracks initial pageview and SPA navigation once per uni
       assertEquals(firstPayload.token, "query-token");
       assertEquals(firstPayload.pagePath, "/start");
       assertEquals(firstPayload.source, "script");
+      assertEquals(firstPayload.logNonAiTraffic, undefined);
       assertMatch(firstPayload.occurredAt, /^\d{4}-\d{2}-\d{2}T/);
 
       history.pushState({}, "", "/start");
@@ -182,6 +187,24 @@ Deno.test("script source tracks initial pageview and SPA navigation once per uni
       assertEquals(calls.length, 2);
       const secondPayload = JSON.parse(String(calls[1].init.body));
       assertEquals(secondPayload.pagePath, "/products");
+    },
+  );
+});
+
+Deno.test("script source forwards non-ai logging override from script query", async () => {
+  await withBrowserHarness(
+    {
+      scriptSrc: "https://cdn.example.com/track.js?token=query-token&non_ai=0",
+      attrs: {},
+    },
+    async ({ calls }) => {
+      const source = getScriptSource("https://fallback.example.com/functions/v1/track");
+      (0, eval)(source);
+      await sleep(10);
+
+      assertEquals(calls.length, 1);
+      const payload = JSON.parse(String(calls[0].init.body));
+      assertEquals(payload.logNonAiTraffic, false);
     },
   );
 });

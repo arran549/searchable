@@ -521,6 +521,9 @@ export function SiteList({
                 />
                 Log non-AI traffic
               </label>
+              <p className="w-full text-xs text-[var(--muted-foreground)]">
+                This is the site default. Install snippets can still force non-AI logging off.
+              </p>
               <div className="flex items-center gap-2">
                 <span className="rounded-full border border-[var(--border)] bg-white/75 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
                   {site.log_non_ai_traffic ? "AI + non-AI" : "AI only"}

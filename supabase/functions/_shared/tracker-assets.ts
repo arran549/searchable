@@ -40,6 +40,14 @@ export function getScriptSource(endpoint: string) {
     ""
   ).toLowerCase();
   const trackSpa = spaValue === "1" || spaValue === "true";
+  const nonAiValue = (
+    script.getAttribute("data-track-non-ai") ||
+    script.getAttribute("data-track-nonai") ||
+    scriptUrl.searchParams.get("non_ai") ||
+    scriptUrl.searchParams.get("nonAi") ||
+    ""
+  ).toLowerCase();
+  const logNonAiTraffic = nonAiValue === "" ? undefined : nonAiValue === "1" || nonAiValue === "true";
   const debugValue = (script.getAttribute("data-track-debug") || scriptUrl.searchParams.get("debug") || "").toLowerCase();
   const debug = debugValue === "1" || debugValue === "true";
   let lastUrl = "";
@@ -61,6 +69,7 @@ export function getScriptSource(endpoint: string) {
       referrer: document.referrer || undefined,
       title: document.title || undefined,
       source: "script",
+      logNonAiTraffic,
     };
 
     fetch(endpoint, {
@@ -105,18 +114,25 @@ export function getScriptSource(endpoint: string) {
 export function getScriptInstallSnippet(
   scriptUrl: string,
   trackingToken: string,
-  options?: { spa?: boolean },
+  options?: { spa?: boolean; nonAi?: boolean },
 ) {
   const params = new URLSearchParams({ token: trackingToken });
   if (options?.spa) {
     params.set("spa", "1");
   }
+  if (options?.nonAi === false) {
+    params.set("non_ai", "0");
+  }
 
   return `<script async src="${escapeAttribute(`${scriptUrl}?${params.toString()}`)}"></script>`;
 }
 
-export function getPixelInstallSnippet(pixelUrl: string, trackingToken: string) {
-  const url = `${pixelUrl}?token=${encodeURIComponent(trackingToken)}`;
+export function getPixelInstallSnippet(pixelUrl: string, trackingToken: string, options?: { nonAi?: boolean }) {
+  const params = new URLSearchParams({ token: trackingToken });
+  if (options?.nonAi === false) {
+    params.set("non_ai", "0");
+  }
+  const url = `${pixelUrl}?${params.toString()}`;
 
   return `<img src="${escapeAttribute(url)}" alt="" width="1" height="1" style="display:none" />`;
 }

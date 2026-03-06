@@ -30,10 +30,29 @@ function getPublicTrackEndpoint(request: Request, url: URL) {
   return `${origin}/functions/v1/track`;
 }
 
+function parseOptionalBoolean(value: string | null) {
+  if (value == null || value === "") {
+    return undefined;
+  }
+
+  const normalized = value.toLowerCase();
+  if (normalized === "1" || normalized === "true") {
+    return true;
+  }
+  if (normalized === "0" || normalized === "false") {
+    return false;
+  }
+
+  return undefined;
+}
+
 async function handlePixel(request: Request, url: URL) {
   const token = url.searchParams.get("token");
   const pageUrl = url.searchParams.get("pageUrl") ?? request.headers.get("referer");
   const pagePath = url.searchParams.get("pagePath") ?? undefined;
+  const logNonAiTraffic = parseOptionalBoolean(
+    url.searchParams.get("non_ai") ?? url.searchParams.get("nonAi"),
+  );
 
   if (token && pageUrl) {
     await insertEvent({
@@ -41,6 +60,7 @@ async function handlePixel(request: Request, url: URL) {
       pageUrl,
       pagePath,
       source: "pixel",
+      logNonAiTraffic,
       request,
     });
   }
