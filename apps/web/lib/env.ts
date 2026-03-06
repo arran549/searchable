@@ -26,6 +26,16 @@ function getSupabasePublicKey() {
   );
 }
 
+export function assertProductionEnv() {
+  if (process.env.NODE_ENV !== "production") {
+    return;
+  }
+
+  if (!process.env.NEXT_PUBLIC_SITE_URL) {
+    throw new Error("Missing required environment variable in production: NEXT_PUBLIC_SITE_URL");
+  }
+}
+
 export const env = {
   get NEXT_PUBLIC_SUPABASE_URL() {
     return getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL");

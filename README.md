@@ -34,6 +34,7 @@ The repo is configured to run on Node 22+ so setup friction stays low on your cu
 For a hosted Supabase project, use `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 For local Supabase started via the CLI, use the local `anon` key from `npm run db:status`.
 Set `NEXT_PUBLIC_SITE_URL` to your app origin (for example `https://app.example.com`) so auth email links use the correct host.
+In your hosted Supabase project, also set Auth URL Configuration (`Site URL` and allowed redirect URLs) to your production domain.
 
 ## Scripts
 

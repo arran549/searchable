@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Manrope } from "next/font/google";
 
+import { assertProductionEnv } from "@/lib/env";
+
 import "./globals.css";
+
+assertProductionEnv();
 
 const manrope = Manrope({
   subsets: ["latin"],

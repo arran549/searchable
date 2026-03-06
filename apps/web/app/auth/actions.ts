@@ -25,6 +25,11 @@ function getConfiguredOrigin() {
   }
 
   const vercelUrl = process.env.VERCEL_URL;
+  const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+
+  if (vercelProductionUrl) {
+    return `https://${vercelProductionUrl}`;
+  }
 
   if (vercelUrl) {
     return `https://${vercelUrl}`;
@@ -38,6 +43,12 @@ async function getRequestOrigin() {
 
   if (configuredOrigin) {
     return configuredOrigin;
+  }
+
+  // In production, require explicit origin config so auth emails never point
+  // to localhost due to proxy/internal host headers.
+  if (process.env.NODE_ENV === "production") {
+    return null;
   }
 
   const headerStore = await headers();
@@ -54,7 +65,7 @@ async function getRequestOrigin() {
     return `${proto}://${host}`.replace(/\/$/, "");
   }
 
-  return "http://127.0.0.1:3000";
+  return null;
 }
 
 function isLocalOrigin(origin: string) {
@@ -76,6 +87,11 @@ export async function signUpAction(formData: FormData) {
 
   const supabase = await getServerSupabaseClient();
   const origin = await getRequestOrigin();
+  if (!origin) {
+    redirect(
+      "/signup?error=Missing%20site%20origin%20configuration.%20Set%20NEXT_PUBLIC_SITE_URL%20for%20this%20deployment.",
+    );
+  }
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
