@@ -13,6 +13,7 @@ import {
   resolveDashboardDateRange,
   resolveDashboardTrafficScope,
 } from "@/lib/dashboard";
+import type { Route } from "next";
 
 type DashboardActivityPageProps = {
   searchParams: Promise<{
@@ -48,9 +49,9 @@ export default async function DashboardActivityPage({
 
   const viewParams = new URLSearchParams(exportParams.toString());
   viewParams.delete("view");
-  const feedHref = `/dashboard/activity${viewParams.toString() ? `?${viewParams.toString()}` : ""}`;
+  const feedHref = `/dashboard/activity${viewParams.toString() ? `?${viewParams.toString()}` : ""}` as Route;
   viewParams.set("view", "table");
-  const tableHref = `/dashboard/activity?${viewParams.toString()}`;
+  const tableHref = `/dashboard/activity?${viewParams.toString()}` as Route;
 
   return (
     <div className="space-y-6">
